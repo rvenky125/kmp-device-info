@@ -4,10 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
-import com.famas.kmp_device_info.RNDeviceModule;
+import com.famas.kmp_device_info.DeviceInfo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -25,7 +26,7 @@ public class DeviceIdResolver {
   public String getInstanceIdSync() {
     String instanceId = getInstanceIdFromPrefs();
 
-    if (instanceId != Build.UNKNOWN) {
+    if (!Objects.equals(instanceId, Build.UNKNOWN)) {
       return instanceId;
     }
 
@@ -53,18 +54,16 @@ public class DeviceIdResolver {
   }
 
   String getUUIDInstanceId() {
-    String uuidInstanceId = UUID.randomUUID().toString();
-    return uuidInstanceId;
+    return UUID.randomUUID().toString();
   }
 
   String getInstanceIdFromPrefs() {
-    SharedPreferences prefs = RNDeviceModule.getRNDISharedPreferences(context);
-    String instanceId = prefs.getString("instanceId", Build.UNKNOWN);
-    return instanceId;
+    SharedPreferences prefs = DeviceInfo.getRNDISharedPreferences(context);
+    return prefs.getString("instanceId", Build.UNKNOWN);
   }
 
   void setInstanceIdInPrefs(String instanceId) {
-    SharedPreferences.Editor editor = RNDeviceModule.getRNDISharedPreferences(context).edit();
+    SharedPreferences.Editor editor = DeviceInfo.getRNDISharedPreferences(context).edit();
     editor.putString("instanceId", instanceId);
     editor.apply();
   }
@@ -73,6 +72,7 @@ public class DeviceIdResolver {
     Class<?> clazz = Class.forName("com.google.android.gms.iid.InstanceID");
     Method method = clazz.getDeclaredMethod("getInstance", Context.class);
     Object obj = method.invoke(null, context.getApplicationContext());
+    assert obj != null;
     Method method1 = obj.getClass().getMethod("getId");
     return (String) method1.invoke(obj);
   }
@@ -81,6 +81,7 @@ public class DeviceIdResolver {
     Class<?> clazz = Class.forName("com.google.firebase.iid.FirebaseInstanceId");
     Method method = clazz.getDeclaredMethod("getInstance");
     Object obj = method.invoke(null);
+    assert obj != null;
     Method method1 = obj.getClass().getMethod("getId");
     return (String) method1.invoke(obj);
   }

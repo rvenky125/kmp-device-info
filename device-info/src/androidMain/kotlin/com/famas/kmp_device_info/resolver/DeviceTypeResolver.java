@@ -69,11 +69,7 @@ public class DeviceTypeResolver {
     // Get display metrics to see if we can differentiate handsets and tablets.
     // NOTE: for API level 16 the metrics will exclude window decor.
     DisplayMetrics metrics = new DisplayMetrics();
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      windowManager.getDefaultDisplay().getRealMetrics(metrics);
-    } else {
-      windowManager.getDefaultDisplay().getMetrics(metrics);
-    }
+    windowManager.getDefaultDisplay().getRealMetrics(metrics);
 
     // Calculate physical size.
     double widthInches = metrics.widthPixels / (double) metrics.xdpi;

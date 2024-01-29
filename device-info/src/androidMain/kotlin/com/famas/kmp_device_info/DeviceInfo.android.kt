@@ -12,7 +12,6 @@ import android.content.SharedPreferences
 import android.content.pm.FeatureInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.hardware.Camera
 import android.hardware.camera2.CameraManager
 import android.location.LocationManager
 import android.media.AudioManager
@@ -28,7 +27,6 @@ import android.os.StatFs
 import android.provider.Settings
 import android.provider.Settings.Secure
 import android.telephony.TelephonyManager
-import android.text.TextUtils
 import android.webkit.WebSettings
 import com.famas.kmp_device_info.resolver.DeviceIdResolver
 import com.famas.kmp_device_info.resolver.DeviceTypeResolver
@@ -39,7 +37,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Collections
 
-class RNDeviceModule(private val context: Context) {
+actual class DeviceInfo(private val context: Context) {
     private val deviceTypeResolver: DeviceTypeResolver = DeviceTypeResolver(context)
     private val deviceIdResolver: DeviceIdResolver = DeviceIdResolver(context)
     private var receiver: BroadcastReceiver? = null
@@ -164,7 +162,7 @@ class RNDeviceModule(private val context: Context) {
             return constants
         }
 
-    fun isEmulator(): Boolean {
+    actual fun isEmulator(): Boolean {
         return isEmulatorSync
     }
 
@@ -196,7 +194,7 @@ class RNDeviceModule(private val context: Context) {
     private val fontScaleSync: Float
         get() = context.resources.configuration.fontScale
 
-    fun getFontScale(): Float {
+    actual fun getFontScale(): Float {
         return fontScaleSync
     }
 
@@ -207,7 +205,7 @@ class RNDeviceModule(private val context: Context) {
             return keyguardManager.isKeyguardSecure
         }
 
-    fun isPinOrFingerprintSet(): Boolean {
+    actual fun isPinOrFingerprintSet(): Boolean {
         return isPinOrFingerprintSetSync
     }
 
@@ -224,7 +222,7 @@ class RNDeviceModule(private val context: Context) {
             null
         }
 
-    fun getIpAddress(): String? {
+    actual fun getIpAddress(): String? {
         return ipAddressSync
     }
 
@@ -246,7 +244,7 @@ class RNDeviceModule(private val context: Context) {
         }
 
 
-    fun isCameraPresent() = isCameraPresentSync
+    actual fun isCameraPresent() = isCameraPresentSync
     
     @get:SuppressLint("HardwareIds")
     val macAddressSync: String
@@ -286,7 +284,7 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getMacAddress() = macAddressSync
+    actual fun getMacAddress() = macAddressSync
 
     
     private val carrierSync: String
@@ -297,7 +295,7 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getCarrier() = carrierSync
+    actual fun getCarrier() = carrierSync
 
     
     private val totalDiskCapacitySync: Double
@@ -312,7 +310,7 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getTotalDiskCapacity() = totalDiskCapacitySync
+    actual fun getTotalDiskCapacity() = totalDiskCapacitySync
 
     private fun getDirTotalCapacity(dir: StatFs): BigInteger {
         val blockCount = dir.blockCountLong
@@ -341,7 +339,7 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getFreeDiskStorage() = freeDiskStorageSync
+    actual fun getFreeDiskStorage() = freeDiskStorageSync
 
     private fun getTotalAvailableBlocks(dir: StatFs): Long {
         return dir.availableBlocksLong
@@ -361,7 +359,7 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getTotalDiskCapacityOld() = totalDiskCapacityOldSync
+    actual fun getTotalDiskCapacityOld() = totalDiskCapacityOldSync
 
     
     val freeDiskStorageOldSync: Double
@@ -382,8 +380,8 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getFreeDiskStorageOld() {
-        freeDiskStorageOldSync)
+    actual fun getFreeDiskStorageOld(): Double {
+        return freeDiskStorageOldSync
     }
 
     
@@ -399,8 +397,8 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun isBatteryCharging() {
-        isBatteryChargingSync)
+    actual fun isBatteryCharging(): Boolean {
+        return isBatteryChargingSync
     }
 
     
@@ -424,8 +422,8 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getUsedMemory() {
-        usedMemorySync)
+    actual fun getUsedMemory(): Double {
+        return usedMemorySync
     }
 
     
@@ -440,53 +438,36 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getPowerState() = powerStateSync
+    actual fun getPowerState() = powerStateSync
 
     
     val batteryLevelSync: Double
         get() {
-            val intent: Intent = context.registerReceiver(
+            val intent: Intent? = context.registerReceiver(
                 null, IntentFilter(
                     Intent.ACTION_BATTERY_CHANGED
                 )
             )
-            val powerState = getPowerStateFromIntent(intent) ?: return 0
-            return powerState.getDouble(BATTERY_LEVEL)
+            val powerState = getPowerStateFromIntent(intent) ?: return 0.0
+            return powerState[BATTERY_LEVEL] as Double
         }
 
     
-    fun getBatteryLevel() {
-        batteryLevelSync)
-    }
-
+    actual fun getBatteryLevel() = batteryLevelSync
     
-    val isAirplaneModeSync: Boolean
+    private val isAirplaneModeSync: Boolean
         get() {
-            val isAirplaneMode: Boolean
-            isAirplaneMode =
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    Settings.System.getInt(
-                        context.getContentResolver(),
-                        Settings.System.AIRPLANE_MODE_ON,
-                        0
-                    ) != 0
-                } else {
-                    Settings.Global.getInt(
-                        context.getContentResolver(),
-                        Settings.Global.AIRPLANE_MODE_ON,
-                        0
-                    ) != 0
-                }
-            return isAirplaneMode
+            return Settings.Global.getInt(
+                context.contentResolver,
+                Settings.Global.AIRPLANE_MODE_ON,
+                0
+            ) != 0
         }
 
     
-    fun isAirplaneMode() {
-        isAirplaneModeSync)
-    }
+    actual fun isAirplaneMode() = isAirplaneModeSync
 
-    (isBlockingSynchronousMethod = true)
-    fun hasGmsSync(): Boolean {
+    private fun hasGmsSync(): Boolean {
         return try {
             val googleApiAvailability =
                 Class.forName("com.google.android.gms.common.GoogleApiAvailability")
@@ -505,12 +486,9 @@ class RNDeviceModule(private val context: Context) {
     }
 
     
-    fun hasGms() {
-        hasGmsSync())
-    }
+    actual fun hasGms() = hasGmsSync()
 
-    (isBlockingSynchronousMethod = true)
-    fun hasHmsSync(): Boolean {
+    private fun hasHmsSync(): Boolean {
         return try {
             val huaweiApiAvailability = Class.forName("com.huawei.hms.api.HuaweiApiAvailability")
             val getInstanceMethod = huaweiApiAvailability.getMethod("getInstance")
@@ -530,46 +508,41 @@ class RNDeviceModule(private val context: Context) {
     }
 
     
-    fun hasHms() {
-        hasHmsSync())
-    }
+    actual fun hasHms() = hasHmsSync()
 
-    (isBlockingSynchronousMethod = true)
-    fun hasSystemFeatureSync(feature: String?): Boolean {
+    private fun hasSystemFeatureSync(feature: String?): Boolean {
         return if (feature == null || feature == "") {
             false
-        } else context.getPackageManager().hasSystemFeature(feature)
+        } else context.packageManager.hasSystemFeature(feature)
     }
 
     
-    fun hasSystemFeature(feature: String?, ) {
-        hasSystemFeatureSync(feature))
+    actual fun hasSystemFeature(feature: String?): Boolean {
+        return hasSystemFeatureSync(feature)
     }
 
     
-    val systemAvailableFeaturesSync: WritableArray
+    val systemAvailableFeaturesSync: List<String>
         get() {
             val featureList: Array<FeatureInfo> =
-                context.getPackageManager().getSystemAvailableFeatures()
-            val promiseArray: WritableArray = Arguments.createArray()
+                context.packageManager.systemAvailableFeatures
+            val promiseArray = listOf<String>()
             for (f in featureList) {
                 if (f.name != null) {
-                    promiseArray.pushString(f.name)
+                    promiseArray.plus(f.name)
                 }
             }
             return promiseArray
         }
 
     
-    fun getSystemAvailableFeatures() {
-        systemAvailableFeaturesSync)
+    actual fun getSystemAvailableFeatures(): List<String> {
+        return systemAvailableFeaturesSync
     }
-
     
-    val isLocationEnabledSync: Boolean
+    private val isLocationEnabledSync: Boolean
         get() {
-            val locationEnabled: Boolean
-            locationEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val locationEnabled: Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val mLocationManager =
                     context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
                 try {
@@ -578,26 +551,20 @@ class RNDeviceModule(private val context: Context) {
                     System.err.println("Unable to determine if location enabled. LocationManager was null")
                     return false
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            } else {
                 val locationMode = Secure.getInt(
-                    context.getContentResolver(),
+                    context.contentResolver,
                     Secure.LOCATION_MODE,
                     Secure.LOCATION_MODE_OFF
                 )
                 locationMode != Secure.LOCATION_MODE_OFF
-            } else {
-                val locationProviders = Secure.getString(
-                    context.getContentResolver(),
-                    Secure.LOCATION_PROVIDERS_ALLOWED
-                )
-                !TextUtils.isEmpty(locationProviders)
             }
             return locationEnabled
         }
 
     
-    fun isLocationEnabled() {
-        isLocationEnabledSync)
+    actual fun isLocationEnabled(): Boolean {
+        return isLocationEnabledSync
     }
 
     
@@ -609,23 +576,21 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun isHeadphonesConnected() {
-        isHeadphonesConnectedSync)
+    actual fun isHeadphonesConnected(): Boolean {
+        return isHeadphonesConnectedSync
     }
 
     
-    val availableLocationProvidersSync: WritableMap
+    private val availableLocationProvidersSync: HashMap<String, Boolean>
         get() {
             val mLocationManager =
                 context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val providersAvailability: WritableMap = Arguments.createMap()
+            val providersAvailability = hashMapOf<String, Boolean>()
             try {
                 val providers = mLocationManager.getProviders(false)
                 for (provider in providers) {
-                    providersAvailability.putBoolean(
-                        provider, mLocationManager.isProviderEnabled(
-                            provider!!
-                        )
+                    providersAvailability[provider] = mLocationManager.isProviderEnabled(
+                        provider!!
                     )
                 }
             } catch (e: Exception) {
@@ -635,43 +600,42 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getAvailableLocationProviders() {
-        availableLocationProvidersSync)
+    actual fun getAvailableLocationProviders(): HashMap<String, Boolean> {
+        return availableLocationProvidersSync
     }
 
     
-    val installReferrerSync: String?
+    private val installReferrerSync: String?
         get() {
             val sharedPref = getRNDISharedPreferences(context)
             return sharedPref.getString("installReferrer", Build.UNKNOWN)
         }
 
     
-    fun getInstallReferrer() {
-        installReferrerSync)
+    actual fun getInstallReferrer(): String? {
+        return installReferrerSync
     }
 
-    @get:Throws(Exception::class)
     private val packageInfo: PackageInfo
-        private get() = context.getPackageManager()
-            .getPackageInfo(context.getPackageName(), 0)
+        get() = context.packageManager
+            .getPackageInfo(context.packageName, 0)
 
     
-    val installerPackageNameSync: String
+    private val installerPackageNameSync: String
         get() {
-            val packageName: String = context.getPackageName()
-            return context.getPackageManager()
+            val packageName: String = context.packageName
+            return context.packageManager
                 .getInstallerPackageName(packageName)
                 ?: return "unknown"
         }
 
     
-    fun getInstallerPackageName() {
-        installerPackageNameSync)
+    actual fun getInstallerPackageName(): String {
+        return installerPackageNameSync
     }
 
     
-    val firstInstallTimeSync: Double
+    private val firstInstallTimeSync: Double
         get() = try {
             packageInfo.firstInstallTime.toDouble()
         } catch (e: Exception) {
@@ -679,12 +643,12 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getFirstInstallTime() {
-        firstInstallTimeSync)
+    actual fun getFirstInstallTime(): Double {
+        return firstInstallTimeSync
     }
 
     
-    val lastUpdateTimeSync: Double
+    private val lastUpdateTimeSync: Double
         get() = try {
             packageInfo.lastUpdateTime.toDouble()
         } catch (e: Exception) {
@@ -692,8 +656,8 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getLastUpdateTime() {
-        lastUpdateTimeSync)
+    actual fun getLastUpdateTime(): Double {
+        return lastUpdateTimeSync
     }
 
     
@@ -725,8 +689,8 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getDeviceName() {
-        deviceNameSync)
+    actual fun getDeviceName(): String {
+        return deviceNameSync
     }
 
     
@@ -751,17 +715,17 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getSerialNumber() {
-        serialNumberSync)
+    actual fun getSerialNumber(): String {
+        return serialNumberSync
     }
 
     
-    val deviceSync: String
+    private val deviceSync: String
         get() = Build.DEVICE
 
     
-    fun getDevice() {
-        deviceSync)
+    actual fun getDevice(): String {
+        return deviceSync
     }
 
     
@@ -769,8 +733,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.ID
 
     
-    fun getBuildId() {
-        buildIdSync)
+    actual fun getBuildId(): String {
+        return buildIdSync
     }
 
     
@@ -778,26 +742,26 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.VERSION.SDK_INT
 
     
-    fun getApiLevel() {
-        apiLevelSync)
+    actual fun getApiLevel(): Int {
+        return apiLevelSync
     }
 
     
-    val bootloaderSync: String
+    private val bootloaderSync: String
         get() = Build.BOOTLOADER
 
     
-    fun getBootloader() {
-        bootloaderSync)
+    actual fun getBootloader(): String {
+        return bootloaderSync
     }
 
     
-    val displaySync: String
+    private val displaySync: String
         get() = Build.DISPLAY
 
     
-    fun getDisplay() {
-        displaySync)
+    actual fun getDisplay(): String {
+        return displaySync
     }
 
     
@@ -805,8 +769,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.FINGERPRINT
 
     
-    fun getFingerprint() {
-        fingerprintSync)
+    actual fun getFingerprint(): String {
+        return fingerprintSync
     }
 
     
@@ -814,8 +778,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.HARDWARE
 
     
-    fun getHardware() {
-        hardwareSync)
+    actual fun getHardware(): String {
+        return hardwareSync
     }
 
     
@@ -823,8 +787,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.HOST
 
     
-    fun getHost() {
-        hostSync)
+    actual fun getHost(): String {
+        return hostSync
     }
 
     
@@ -832,8 +796,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.PRODUCT
 
     
-    fun getProduct() {
-        productSync)
+    actual fun getProduct(): String {
+        return productSync
     }
 
     
@@ -841,8 +805,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.TAGS
 
     
-    fun getTags() {
-        tagsSync)
+    actual fun getTags(): String {
+        return tagsSync
     }
 
     
@@ -850,8 +814,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.TYPE
 
     
-    fun getType() {
-        typeSync)
+    actual fun getType(): String {
+        return typeSync
     }
 
     
@@ -859,8 +823,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.MANUFACTURER
 
     
-    fun getSystemManufacturer() {
-        systemManufacturerSync)
+    actual fun getSystemManufacturer(): String {
+        return systemManufacturerSync
     }
 
     
@@ -868,8 +832,8 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.VERSION.CODENAME
 
     
-    fun getCodename() {
-        codenameSync)
+    actual fun getCodename(): String {
+        return codenameSync
     }
 
     
@@ -877,21 +841,21 @@ class RNDeviceModule(private val context: Context) {
         get() = Build.VERSION.INCREMENTAL
 
     
-    fun getIncremental() {
-        incrementalSync)
+    actual fun getIncremental(): String {
+        return incrementalSync
     }
 
     
     @get:SuppressLint("HardwareIds")
     val uniqueIdSync: String
         get() = Secure.getString(
-            context.getContentResolver(),
+            context.contentResolver,
             Secure.ANDROID_ID
         )
 
     
-    fun getUniqueId() {
-        uniqueIdSync)
+    actual fun getUniqueId(): String {
+        return uniqueIdSync
     }
 
     
@@ -900,97 +864,86 @@ class RNDeviceModule(private val context: Context) {
         get() = uniqueIdSync
 
     
-    fun getAndroidId() {
-        androidIdSync)
+    actual fun getAndroidId(): String {
+        return androidIdSync
     }
 
     
-    val maxMemorySync: Double
+    private val maxMemorySync: Double
         get() = Runtime.getRuntime().maxMemory().toDouble()
 
     
-    fun getMaxMemory() {
-        maxMemorySync)
+    actual fun getMaxMemory(): Double {
+        return maxMemorySync
     }
 
     
-    val totalMemorySync: Double
+    private val totalMemorySync: Double
         get() {
             val actMgr =
                 context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val memInfo = ActivityManager.MemoryInfo()
-            if (actMgr != null) {
-                actMgr.getMemoryInfo(memInfo)
-            } else {
-                System.err.println("Unable to getMemoryInfo. ActivityManager was null")
-                return (-1).toDouble()
-            }
+            actMgr.getMemoryInfo(memInfo)
             return memInfo.totalMem.toDouble()
         }
 
     
-    fun getTotalMemory() {
-        totalMemorySync)
+    actual fun getTotalMemory(): Double {
+        return totalMemorySync
     }
 
-    @get:Suppress("deprecation")
-    
-    val instanceIdSync: String
+    private val instanceIdSync: String
         get() = deviceIdResolver.instanceIdSync
 
     
-    fun getInstanceId() {
-        instanceIdSync)
+    actual fun getInstanceId(): String {
+        return instanceIdSync
     }
 
     
-    val baseOsSync: String
+    private val baseOsSync: String
         get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Build.VERSION.BASE_OS
         } else "unknown"
 
     
-    fun getBaseOs() {
-        baseOsSync)
+    actual fun getBaseOs(): String {
+        return baseOsSync
     }
 
     
-    val previewSdkIntSync: String
+    private val previewSdkIntSync: String
         get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Integer.toString(Build.VERSION.PREVIEW_SDK_INT)
+            Build.VERSION.PREVIEW_SDK_INT.toString()
         } else "unknown"
 
     
-    fun getPreviewSdkInt() {
-        previewSdkIntSync)
+    actual fun getPreviewSdkInt(): String {
+        return previewSdkIntSync
     }
 
     
-    val securityPatchSync: String
+    private val securityPatchSync: String
         get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Build.VERSION.SECURITY_PATCH
         } else "unknown"
 
     
-    fun getSecurityPatch() {
-        securityPatchSync)
+    actual fun getSecurityPatch(): String {
+       return securityPatchSync
     }
 
     
-    val userAgentSync: String
+    private val userAgentSync: String?
         get() = try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                WebSettings.getDefaultUserAgent(context)
-            } else {
-                System.getProperty("http.agent")
-            }
+            WebSettings.getDefaultUserAgent(context)
         } catch (e: RuntimeException) {
-            System.getProperty("http.agent")
+            System.getProperty("http.agent")?.toString()
         }
 
     
-    fun getUserAgent() {
-        userAgentSync)
+    actual fun getUserAgent(): String? {
+        return userAgentSync
     }
 
     
@@ -1020,61 +973,53 @@ class RNDeviceModule(private val context: Context) {
         }
 
     
-    fun getPhoneNumber() {
-        phoneNumberSync)
+    actual fun getPhoneNumber(): String {
+        return phoneNumberSync
     }
 
     
-    val supportedAbisSync: WritableArray
+    val supportedAbisSync: List<String>
         get() {
-            val array: WritableArray = WritableNativeArray()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                for (abi in Build.SUPPORTED_ABIS) {
-                    array.pushString(abi)
-                }
-            } else {
-                array.pushString(Build.CPU_ABI)
+            val array = listOf<String>()
+            for (abi in Build.SUPPORTED_ABIS) {
+                array.plus(abi)
             }
             return array
         }
 
     
-    fun getSupportedAbis() {
-        supportedAbisSync)
+    actual fun getSupportedAbis(): List<String> {
+        return supportedAbisSync
     }
 
     
-    val supported32BitAbisSync: WritableArray
+    private val supported32BitAbisSync: List<String>
         get() {
-            val array: WritableArray = WritableNativeArray()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                for (abi in Build.SUPPORTED_32_BIT_ABIS) {
-                    array.pushString(abi)
-                }
+            val array = listOf<String>()
+            for (abi in Build.SUPPORTED_32_BIT_ABIS) {
+                array.plus(abi)
             }
             return array
         }
 
     
-    fun getSupported32BitAbis() {
-        supported32BitAbisSync)
+    actual fun getSupported32BitAbis(): List<String> {
+        return supported32BitAbisSync
     }
 
     
-    val supported64BitAbisSync: WritableArray
+    val supported64BitAbisSync: List<String>
         get() {
-            val array: WritableArray = WritableNativeArray()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                for (abi in Build.SUPPORTED_64_BIT_ABIS) {
-                    array.pushString(abi)
-                }
+            val array = listOf<String>()
+            for (abi in Build.SUPPORTED_64_BIT_ABIS) {
+                array.plus(abi)
             }
             return array
         }
 
     
-    fun getSupported64BitAbis() {
-        supported64BitAbisSync)
+    actual fun getSupported64BitAbis(): List<String> {
+        return supported64BitAbisSync
     }
 
     private fun getPowerStateFromIntent(intent: Intent?): HashMap<String, Any>? {
@@ -1096,10 +1041,7 @@ class RNDeviceModule(private val context: Context) {
         }
         val powerManager =
             context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        var powerSaveMode = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            powerSaveMode = powerManager.isPowerSaveMode
-        }
+        var powerSaveMode = powerManager.isPowerSaveMode
         val powerState = HashMap<String, Any>()
         powerState[BATTERY_STATE] = batteryState
         powerState[BATTERY_LEVEL] = batteryPercentage
@@ -1108,38 +1050,33 @@ class RNDeviceModule(private val context: Context) {
     }
 
     private fun sendEvent(
-        reactContext: ReactContext,
+        context: Context,
         eventName: String,
-        @Nullable data: Any
+        data: Any
     ) {
-        reactContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit(eventName, data)
+
     }
 
     
-    val supportedMediaTypeListSync: WritableArray
+    private val supportedMediaTypeListSync: List<String>
         get() {
-            val writableArray: WritableArray = WritableNativeArray()
+            val writableArray = listOf<String>()
             for (i in 0 until MediaCodecList.getCodecCount()) {
                 val mediaCodecInfo = MediaCodecList.getCodecInfoAt(i)
                 val supportedTypes = mediaCodecInfo.supportedTypes
                 for (j in supportedTypes.indices) {
-                    writableArray.pushString(supportedTypes[j])
+                    writableArray.plus(supportedTypes[j])
                 }
             }
             return writableArray
         }
 
     
-    fun getSupportedMediaTypeList(promise: Promise) {
-        promise.resolve(supportedMediaTypeListSync)
+    actual fun getSupportedMediaTypeList(): List<String> {
+        return supportedMediaTypeListSync
     }
 
     companion object {
-        @get:Nonnull
-        val name = "RNDeviceInfo"
-            get() = Companion.field
         private const val BATTERY_STATE = "batteryState"
         private const val BATTERY_LEVEL = "batteryLevel"
         private const val LOW_POWER_MODE = "lowPowerMode"

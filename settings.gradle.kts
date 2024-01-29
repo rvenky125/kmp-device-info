@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "kmp-device-info"
 include(":device-info")
+include(":sample")

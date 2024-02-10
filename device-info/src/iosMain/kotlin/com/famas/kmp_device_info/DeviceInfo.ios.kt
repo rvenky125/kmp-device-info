@@ -1,231 +1,258 @@
 package com.famas.kmp_device_info
 
 actual class DeviceInfo {
-    actual fun isEmulator(): Boolean {
-        TODO("Not yet implemented")
-    }
+    actual fun isEmulator(): Boolean = RNDeviceInfo.isEmulator()
 
-    actual fun getFontScale(): Float {
-        TODO("Not yet implemented")
-    }
+    actual fun getFontScale(): Float = RNDeviceInfo.getFontScale()
 
-    actual fun isPinOrFingerprintSet(): Boolean {
-        TODO("Not yet implemented")
-    }
+    actual fun isPinOrFingerprintSet(): Boolean = RNDeviceInfo.isPinOrFingerprintSet()
 
-    actual fun getIpAddress(): String? {
-        TODO("Not yet implemented")
-    }
+    actual fun getIpAddress(): String? = RNDeviceInfo.getIpAddress()
 
     actual fun isCameraPresent(): Boolean? {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getMacAddress(): String {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getMacAddress()
     }
 
     actual fun getCarrier(): String {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getCarrier() ?: ""
     }
 
     actual fun getTotalDiskCapacity(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getTotalDiskCapacity()
     }
 
     actual fun getFreeDiskStorage(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getFreeDiskStorage()
+
     }
 
     actual fun getTotalDiskCapacityOld(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getTotalDiskCapacityOld()
+
     }
 
     actual fun getFreeDiskStorageOld(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getFreeDiskStorageOld()
+
     }
 
     actual fun isBatteryCharging(): Boolean {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.isBatteryCharging()
+
     }
 
     actual fun getUsedMemory(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getUsedMemory().toDouble()
     }
 
-    actual fun getPowerState(): HashMap<String, Any>? {
-        TODO("Not yet implemented")
+    actual fun getPowerState(): Map<String, Any> {
+        val map = RNDeviceInfo.getPowerState()
+        return map.mapValues {
+            it.value ?: ""
+        }
     }
 
     actual fun getBatteryLevel(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getBatteryLevel().toDouble()
+
     }
 
     actual fun isAirplaneMode(): Boolean {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun hasGms(): Boolean {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun hasHms(): Boolean {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun hasSystemFeature(feature: String?): Boolean {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getSystemAvailableFeatures(): List<String> {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun isLocationEnabled(): Boolean {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.isLocationEnabled()
     }
 
     actual fun isHeadphonesConnected(): Boolean {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.isHeadphonesConnected()
+
     }
 
-    actual fun getAvailableLocationProviders(): HashMap<String, Boolean> {
-        TODO("Not yet implemented")
+    actual fun getAvailableLocationProviders(): Map<String, Boolean> {
+        return RNDeviceInfo.getAvailableLocationProviders() as Map<String, Boolean>
+
     }
 
     actual fun getInstallReferrer(): String? {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getInstallerPackageName(): String {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getInstallerPackageName()
+
     }
 
     actual fun getFirstInstallTime(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getFirstInstallTime().toDouble()
+
     }
 
     actual fun getLastUpdateTime(): Double {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getDeviceName(): String {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getDeviceName()
+
     }
 
     actual fun getSerialNumber(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getDevice(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getBuildId(): String {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getBuildId()
+
     }
 
     actual fun getApiLevel(): Int {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getBootloader(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getDisplay(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getFingerprint(): String {
-        TODO("Not yet implemented")
+
+        throw NotAvailableToPlatformException
     }
 
     actual fun getHardware(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getHost(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getProduct(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getTags(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getType(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
+    }
+
+    actual fun isLowRamDevice(): Boolean {
+        throw NotAvailableToPlatformException
     }
 
     actual fun getSystemManufacturer(): String {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getSystemManufacturer()
+    }
+
+    actual fun isDisplayZoomed(): Boolean {
+        return RNDeviceInfo.isDisplayZoomed()
+    }
+
+    actual suspend fun getDeviceToken(): String? {
+        return RNDeviceInfo.getDeviceToken()
+    }
+
+
+    actual fun getBrightness(): Float {
+        return RNDeviceInfo.getBrightness()
     }
 
     actual fun getCodename(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getIncremental(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getUniqueId(): String {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getUniqueId().toString()
+
     }
 
     actual fun getAndroidId(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getMaxMemory(): Double {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getTotalMemory(): Double {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getTotalMemory()
+
     }
 
     actual fun getInstanceId(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getBaseOs(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getPreviewSdkInt(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getSecurityPatch(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
-    actual fun getUserAgent(): String? {
-        TODO("Not yet implemented")
+    actual suspend fun getUserAgent(): String? {
+        return RNDeviceInfo.getUserAgent()
     }
 
     actual fun getPhoneNumber(): String {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getSupportedAbis(): List<String> {
-        TODO("Not yet implemented")
+        return RNDeviceInfo.getSupportedAbis().toList()
+
     }
 
     actual fun getSupported32BitAbis(): List<String> {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getSupported64BitAbis(): List<String> {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 
     actual fun getSupportedMediaTypeList(): List<String> {
-        TODO("Not yet implemented")
+        throw NotAvailableToPlatformException
     }
 }

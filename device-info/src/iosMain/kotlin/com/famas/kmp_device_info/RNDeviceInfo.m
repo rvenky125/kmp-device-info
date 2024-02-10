@@ -32,7 +32,7 @@ RCT_EXPORT_MODULE();
 
 - (NSDictionary *)constantsToExport {
     return @{
-         @"deviceId": [self getDeviceId],
+         @"deviceId": [self getDeviceId],f
          @"bundleId": [self getBundleId],
          @"systemName": [self getSystemName],
          @"systemVersion": [self getSystemVersion],

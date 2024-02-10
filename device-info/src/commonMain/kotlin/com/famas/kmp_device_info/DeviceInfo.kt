@@ -27,7 +27,7 @@ expect class DeviceInfo {
 
     fun getUsedMemory(): Double
 
-    fun getPowerState(): HashMap<String, Any>?
+    fun getPowerState(): Map<String, Any>
 
     fun getBatteryLevel(): Double
 
@@ -45,7 +45,7 @@ expect class DeviceInfo {
 
     fun isHeadphonesConnected(): Boolean
 
-    fun getAvailableLocationProviders(): HashMap<String, Boolean>
+    fun getAvailableLocationProviders(): Map<String, Boolean>
 
     fun getInstallReferrer(): String?
 
@@ -103,7 +103,7 @@ expect class DeviceInfo {
 
     fun getSecurityPatch(): String
 
-    fun getUserAgent(): String?
+    suspend fun getUserAgent(): String?
 
     fun getPhoneNumber(): String
 
@@ -114,4 +114,8 @@ expect class DeviceInfo {
     fun getSupported64BitAbis(): List<String>
 
     fun getSupportedMediaTypeList(): List<String>
+    fun isLowRamDevice(): Boolean
+    fun isDisplayZoomed(): Boolean
+    fun getBrightness(): Float
+    suspend fun getDeviceToken(): String?
 }

@@ -64,27 +64,27 @@ actual class DeviceInfo(private val context: Context) {
                         ignoreCase = true
                     ) || mLastPowerSaveState != powerSaveState
                 ) {
-                    sendEvent(
-                        context,
-                        "RNDeviceInfo_powerStateDidChange",
-                        batteryState
-                    )
+//                    sendEvent(
+//                        context,
+//                        "RNDeviceInfo_powerStateDidChange",
+//                        batteryState
+//                    )
                     mLastBatteryState = batteryState
                     mLastPowerSaveState = powerSaveState
                 }
                 if (mLastBatteryLevel != batteryLevel) {
-                    sendEvent(
-                        context,
-                        "RNDeviceInfo_batteryLevelDidChange",
-                        batteryLevel
-                    )
-                    if (batteryLevel <= .15) {
-                        sendEvent(
-                            context,
-                            "RNDeviceInfo_batteryLevelIsLow",
-                            batteryLevel
-                        )
-                    }
+//                    sendEvent(
+//                        context,
+//                        "RNDeviceInfo_batteryLevelDidChange",
+//                        batteryLevel
+//                    )
+//                    if (batteryLevel <= .15) {
+//                        sendEvent(
+//                            context,
+//                            "RNDeviceInfo_batteryLevelIsLow",
+//                            batteryLevel
+//                        )
+//                    }
                     mLastBatteryLevel = batteryLevel
                 }
             }
@@ -100,11 +100,12 @@ actual class DeviceInfo(private val context: Context) {
         headphoneConnectionReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val isConnected: Boolean = isHeadphonesConnectedSync
-                sendEvent(
-                    context,
-                    "RNDeviceInfo_headphoneConnectionDidChange",
-                    isConnected
-                )
+                print(isConnected)
+//                sendEvent(
+//                    context,
+//                    "RNDeviceInfo_headphoneConnectionDidChange",
+//                    isConnected
+//                )
             }
         }
         context.registerReceiver(headphoneConnectionReceiver, filter)
@@ -122,8 +123,7 @@ actual class DeviceInfo(private val context: Context) {
             return manager.connectionInfo
         }
 
-    private val isLowRamDevice: Boolean
-        get() {
+    actual fun isLowRamDevice(): Boolean {
             val am =
                 context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             var isLowRamDevice = false
@@ -146,7 +146,7 @@ actual class DeviceInfo(private val context: Context) {
                 buildNumber = "unknown"
                 appName = "unknown"
             }
-            val constants: MutableMap<String, Any> = HashMap()
+            val constants: MutableMap<String, Any> = mutableMapOf()
             constants["deviceId"] = Build.BOARD
             constants["bundleId"] = context.getPackageName()
             constants["systemName"] = "Android"
@@ -154,11 +154,11 @@ actual class DeviceInfo(private val context: Context) {
             constants["appVersion"] = appVersion
             constants["buildNumber"] = buildNumber
             constants["isTablet"] = deviceTypeResolver.isTablet
-            constants["isLowRamDevice"] = isLowRamDevice
+            constants["isLowRamDevice"] = isLowRamDevice()
             constants["appName"] = appName
             constants["brand"] = Build.BRAND
             constants["model"] = Build.MODEL
-            constants["deviceType"] = deviceTypeResolver.deviceType.value
+            constants["deviceType"] = deviceTypeResolver.deviceType.ordinal
             return constants
         }
 
@@ -427,7 +427,7 @@ actual class DeviceInfo(private val context: Context) {
     }
 
     
-    val powerStateSync: HashMap<String, Any>?
+    val powerStateSync: Map<String, Any>?
         get() {
             val intent: Intent? = context.registerReceiver(
                 null, IntentFilter(
@@ -438,8 +438,7 @@ actual class DeviceInfo(private val context: Context) {
         }
 
     
-    actual fun getPowerState() = powerStateSync
-
+    actual fun getPowerState(): Map<String, Any> = powerStateSync ?: mapOf()
     
     val batteryLevelSync: Double
         get() {
@@ -581,11 +580,11 @@ actual class DeviceInfo(private val context: Context) {
     }
 
     
-    private val availableLocationProvidersSync: HashMap<String, Boolean>
+    private val availableLocationProvidersSync: Map<String, Boolean>
         get() {
             val mLocationManager =
                 context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val providersAvailability = hashMapOf<String, Boolean>()
+            val providersAvailability = mutableMapOf<String, Boolean>()
             try {
                 val providers = mLocationManager.getProviders(false)
                 for (provider in providers) {
@@ -600,7 +599,7 @@ actual class DeviceInfo(private val context: Context) {
         }
 
     
-    actual fun getAvailableLocationProviders(): HashMap<String, Boolean> {
+    actual fun getAvailableLocationProviders(): Map<String, Boolean> {
         return availableLocationProvidersSync
     }
 
@@ -942,7 +941,7 @@ actual class DeviceInfo(private val context: Context) {
         }
 
     
-    actual fun getUserAgent(): String? {
+    actual suspend fun getUserAgent(): String? {
         return userAgentSync
     }
 
@@ -1022,7 +1021,7 @@ actual class DeviceInfo(private val context: Context) {
         return supported64BitAbisSync
     }
 
-    private fun getPowerStateFromIntent(intent: Intent?): HashMap<String, Any>? {
+    private fun getPowerStateFromIntent(intent: Intent?): Map<String, Any>? {
         if (intent == null) {
             return null
         }
@@ -1042,7 +1041,7 @@ actual class DeviceInfo(private val context: Context) {
         val powerManager =
             context.getSystemService(Context.POWER_SERVICE) as PowerManager
         var powerSaveMode = powerManager.isPowerSaveMode
-        val powerState = HashMap<String, Any>()
+        val powerState = mutableMapOf<String, Any>()
         powerState[BATTERY_STATE] = batteryState
         powerState[BATTERY_LEVEL] = batteryPercentage
         powerState[LOW_POWER_MODE] = powerSaveMode
@@ -1084,5 +1083,17 @@ actual class DeviceInfo(private val context: Context) {
         fun getRNDISharedPreferences(context: Context): SharedPreferences {
             return context.getSharedPreferences("react-native-device-info", Context.MODE_PRIVATE)
         }
+    }
+
+    actual fun isDisplayZoomed(): Boolean {
+        throw NotAvailableToPlatformException
+    }
+
+    actual fun getBrightness(): Float {
+        throw NotAvailableToPlatformException
+    }
+
+    actual suspend fun getDeviceToken(): String? {
+        throw NotAvailableToPlatformException
     }
 }

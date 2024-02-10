@@ -3,7 +3,6 @@ package com.famas.kmp_device_info.resolver;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
@@ -23,23 +22,23 @@ public class DeviceTypeResolver {
   }
 
   public boolean isTablet() {
-    return getDeviceType() == DeviceType.TABLET;
+    return getDeviceType() == DeviceType.DeviceTypeTablet;
   }
 
   public DeviceType getDeviceType() {
     // Detect TVs via ui mode (Android TVs) or system features (Fire TV).
     if (context.getPackageManager().hasSystemFeature("amazon.hardware.fire_tv")) {
-      return DeviceType.TV;
+      return DeviceType.DeviceTypeTv;
     }
 
     UiModeManager uiManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
     if (uiManager != null && uiManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-      return DeviceType.TV;
+      return DeviceType.DeviceTypeTv;
     }
 
     DeviceType deviceTypeFromConfig = getDeviceTypeFromResourceConfiguration();
 
-    if (deviceTypeFromConfig != null && deviceTypeFromConfig != DeviceType.UNKNOWN) {
+    if (deviceTypeFromConfig != null && deviceTypeFromConfig != DeviceType.DeviceTypeUnknown) {
       return deviceTypeFromConfig;
     }
 
@@ -52,10 +51,10 @@ public class DeviceTypeResolver {
     int smallestScreenWidthDp = context.getResources().getConfiguration().smallestScreenWidthDp;
 
     if (smallestScreenWidthDp == Configuration.SMALLEST_SCREEN_WIDTH_DP_UNDEFINED) {
-      return DeviceType.UNKNOWN;
+      return DeviceType.DeviceTypeUnknown;
     }
 
-    return smallestScreenWidthDp >= 600 ? DeviceType.TABLET : DeviceType.HANDSET;
+    return smallestScreenWidthDp >= 600 ? DeviceType.DeviceTypeTablet : DeviceType.DeviceTypeHandset;
   }
 
   private DeviceType getDeviceTypeFromPhysicalSize() {
@@ -63,7 +62,7 @@ public class DeviceTypeResolver {
     WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 
     if (windowManager == null) {
-      return DeviceType.UNKNOWN;
+      return DeviceType.DeviceTypeUnknown;
     }
 
     // Get display metrics to see if we can differentiate handsets and tablets.
@@ -78,13 +77,13 @@ public class DeviceTypeResolver {
 
     if (diagonalSizeInches >= 3.0 && diagonalSizeInches <= 6.9) {
       // Devices in a sane range for phones are considered to be Handsets.
-      return DeviceType.HANDSET;
+      return DeviceType.DeviceTypeHandset;
     } else if (diagonalSizeInches > 6.9 && diagonalSizeInches <= 18.0) {
       // Devices larger than handset and in a sane range for tablets are tablets.
-      return DeviceType.TABLET;
+      return DeviceType.DeviceTypeTablet;
     } else {
       // Otherwise, we don't know what device type we're on/
-      return DeviceType.UNKNOWN;
+      return DeviceType.DeviceTypeUnknown;
     }
   }
 }

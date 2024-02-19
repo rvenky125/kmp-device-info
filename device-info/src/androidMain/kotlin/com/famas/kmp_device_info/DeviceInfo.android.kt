@@ -891,11 +891,11 @@ actual class DeviceInfo(private val context: Context) {
         return totalMemorySync
     }
 
-    private val instanceIdSync: String
+    private val instanceIdSync: String?
         get() = deviceIdResolver.instanceIdSync
 
     
-    actual fun getInstanceId(): String {
+    actual fun getInstanceId(): String? {
         return instanceIdSync
     }
 

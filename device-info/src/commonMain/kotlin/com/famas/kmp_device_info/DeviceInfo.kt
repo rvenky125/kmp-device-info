@@ -95,7 +95,7 @@ expect class DeviceInfo {
 
     fun getTotalMemory(): Double
 
-    fun getInstanceId(): String
+    fun getInstanceId(): String?
 
     fun getBaseOs(): String
 

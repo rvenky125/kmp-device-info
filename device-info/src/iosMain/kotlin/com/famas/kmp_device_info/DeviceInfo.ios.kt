@@ -215,7 +215,7 @@ actual class DeviceInfo {
 
     }
 
-    actual fun getInstanceId(): String {
+    actual fun getInstanceId(): String? {
         throw NotAvailableToPlatformException
     }
 

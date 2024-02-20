@@ -28,6 +28,10 @@ kotlin {
     }
     
     sourceSets {
+        androidMain.dependencies {
+            implementation("androidx.startup:startup-runtime:1.1.1")
+        }
+
         commonMain.dependencies {
             //put your multiplatform dependencies here
         }

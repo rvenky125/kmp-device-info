@@ -2,15 +2,21 @@ package com.famas.kmp_device_info
 
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.memScoped
+import platform.CoreFoundation.CFDictionaryAddValue
+import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFDictionaryRef
 import platform.CoreFoundation.CFRelease
+import platform.CoreFoundation.CFStringRef
 import platform.CoreFoundation.CFUUIDCreate
 import platform.CoreFoundation.CFUUIDCreateString
+import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSClassFromString
 import platform.Foundation.NSData
 import platform.Foundation.NSDictionary
 import platform.Foundation.NSMutableDictionary
 import platform.Foundation.NSSelectorFromString
+import platform.Foundation.NSString
 import platform.Foundation.NSUUID
 import platform.Foundation.NSUserDefaults
 import platform.Foundation.setValue
@@ -66,16 +72,22 @@ class DeviceUID {
     }
 
     private fun valueForKeychainKey(key: String, service: String): String? {
-        val keychainItem = keychainItemForKey(key, service = service)
-        keychainItem.setValue(kCFBooleanTrue, kSecReturnData.toString())
-        keychainItem.setValue(kCFBooleanTrue, kSecReturnAttributes.toString())
-        val result = SecItemCopyMatching(keychainItem as CFDictionaryRef, null)
-        if (result != noErr) {
-            return null
+        memScoped {
+            val keychainItem = CFDictionaryCreateMutable(null, 4, null, null)
+            val cfKey = CFBridgingRetain(key as NSString) as CFStringRef
+            val cfService = CFBridgingRetain(service as NSString) as CFStringRef
+
+            CFDictionaryAddValue(keychainItem, kSecReturnData, cfKey)
+            CFDictionaryAddValue(keychainItem, kSecReturnAttributes, cfService)
+
+            val result = SecItemCopyMatching(keychainItem, null)
+            if (result != noErr) {
+                return null
+            }
+            val resultDict = result as NSDictionary
+            val data = kSecValueData?.cfToKotlinString()?.let { resultDict.valueForKey(it) } as NSData
+            return data.toString()
         }
-        val resultDict = result as NSDictionary
-        val data = resultDict.valueForKey(kSecValueData.toString()) as NSData
-        return data.toString()
     }
 
     fun setValue(value: String, forUserDefaultsKey: String) {
@@ -88,12 +100,12 @@ class DeviceUID {
     }
 
     private fun keychainItemForKey(key: String, service: String): NSMutableDictionary {
-        val keychainItem = mutableMapOf<Any?, Any?>()
-        keychainItem[kSecClass as Any] = kSecClassGenericPassword
-        keychainItem[kSecAttrAccessible as Any] = kSecAttrAccessibleAfterFirstUnlock
-        keychainItem[kSecAttrAccount as Any] = key
-        keychainItem[kSecAttrService as Any] = service
-        return keychainItem as NSMutableDictionary
+        val keychainItem = NSMutableDictionary()
+        kSecClass?.cfToKotlinString()?.let { keychainItem.setValue(kSecClassGenericPassword, it) }
+        kSecAttrAccessible?.cfToKotlinString()?.let { keychainItem.setValue(kSecAttrAccessibleAfterFirstUnlock, it) }
+        kSecAttrAccount?.cfToKotlinString()?.let { keychainItem.setValue(key, it) }
+        kSecAttrService?.cfToKotlinString()?.let { keychainItem.setValue(service, it) }
+        return keychainItem
     }
 
     fun setValue(value: String, forKeychainKey: String, inService: String): Boolean {
@@ -103,24 +115,25 @@ class DeviceUID {
     }
 
     fun updateValue(value: String, forKeychainKey: String, inService: String): Boolean {
-        val query = mutableMapOf(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrAccount to forKeychainKey,
-            kSecAttrService to inService
-        )
-        val attributesToUpdate = mutableMapOf(
-            kSecValueData to value
-        )
-        return SecItemUpdate(query as CFDictionaryRef, attributesToUpdate as CFDictionaryRef) == errSecSuccess
+        val query = NSMutableDictionary()
+        kSecClass?.cfToKotlinString()?.let { query.setValue(kSecClassGenericPassword, it) }
+        kSecAttrAccount?.cfToKotlinString()?.let { query.setValue(forKeychainKey, it) }
+        kSecAttrService?.cfToKotlinString()?.let { query.setValue(inService, it) }
+
+        val attributesToUpdate = NSMutableDictionary()
+        kSecValueData?.cfToKotlinString()?.let {
+            attributesToUpdate.setValue(value, it)
+        }
+        return SecItemUpdate(CFBridgingRetain(query) as CFDictionaryRef, CFBridgingRetain(attributesToUpdate) as CFDictionaryRef) == errSecSuccess
     }
 
     fun deleteValue(forKeychainKey: String, inService: String): Boolean {
-        val query = mutableMapOf(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrAccount to forKeychainKey,
-            kSecAttrService to inService
-        )
-        return SecItemDelete(query as CFDictionaryRef) == errSecSuccess
+        val query = NSMutableDictionary()
+        kSecClass?.cfToKotlinString()?.let { query.setValue(kSecClassGenericPassword, it) }
+        kSecAttrAccount?.cfToKotlinString()?.let { query.setValue(forKeychainKey, it) }
+        kSecAttrService?.cfToKotlinString()?.let { query.setValue(inService, it) }
+
+        return SecItemDelete(CFBridgingRetain(query) as CFDictionaryRef) == errSecSuccess
     }
 
     private fun save() {

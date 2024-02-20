@@ -1,18 +1,10 @@
 package com.famas.kmp_device_info
 
-import kotlinx.cinterop.COpaquePointer
-import kotlinx.cinterop.CPointerVarOf
-import kotlinx.cinterop.CValuesRef
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.ULongVar
-import kotlinx.cinterop.ULongVarOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.cValue
-import kotlinx.cinterop.interpretCPointer
 import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.objcPtr
-import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.toKString
 import platform.AVFAudio.AVAudioSession
@@ -20,10 +12,8 @@ import platform.AVFAudio.AVAudioSessionPortBluetoothA2DP
 import platform.AVFAudio.AVAudioSessionPortBluetoothHFP
 import platform.AVFAudio.AVAudioSessionPortDescription
 import platform.AVFAudio.AVAudioSessionPortHeadphones
-import platform.AVFAudio.AVAudioSessionRouteDescription
 import platform.AVFAudio.currentRoute
 import platform.CoreFoundation.*
-import platform.CoreGraphics.CGFloat
 import platform.CoreLocation.*
 import platform.CoreTelephony.CTTelephonyNetworkInfo
 import platform.DeviceCheck.DCDevice
@@ -33,192 +23,64 @@ import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthentication
 import platform.Security.*
 import platform.UIKit.*
 import platform.WebKit.WKWebView
-import platform.darwin.KERN_SUCCESS
-import platform.darwin.NSInteger
 import platform.darwin.TARGET_IPHONE_SIMULATOR
 import platform.darwin.TARGET_OS_MACCATALYST
-import platform.darwin.TASK_BASIC_INFO
-import platform.darwin.getifaddrs
-import platform.darwin.kern_return_t
-import platform.darwin.noErr
 import platform.darwin.sysctlbyname
-import platform.darwin.task_basic_info
-import platform.darwin.task_info_t
-import platform.darwin.version_min_command
-import platform.posix.AF_INET
-import platform.posix.AF_INET6
-import platform.posix.alloca
-import platform.posix.calloc
-import platform.posix.err
-import platform.posix.size_tVar
-import platform.posix.sockaddr_in
 import platform.posix.uname
 import platform.posix.utsname
-import platform.zlib.alloc_func
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 @OptIn(ExperimentalForeignApi::class)
-object RNDeviceInfo {
-     var _uid: String? = null
-     val uid: String
-        get() {
-            _uid?.let { return it }
-            val uid = valueForKeychainKey(UIDKey, service = UIDKey)
-            _uid = uid
-            if (uid != null) return uid
-            val uid2 = valueForUserDefaultsKey(UIDKey)
-            _uid = uid2
-            if (uid2 != null) return uid2
-            val uid3 = appleIFV()
-            _uid = uid3
-            if (uid3 != null) return uid3
-            _uid = randomUUID()
-            return _uid!!
-        }
-
-    fun uid(): String? = uid
-
-    fun syncUid(): String? {
-        _uid = appleIFV()
-        if (_uid == null) {
-            _uid = randomUUID()
-        }
-        save()
-        return _uid
-    }
-
-     fun valueForKeychainKey(key: String, service: String): String? {
-        val keychainItem = mutableMapOf<Any?, Any?>()
-        keychainItem[kSecClass as Any] = kSecClassGenericPassword
-        keychainItem[kSecAttrAccessible as Any] = kSecAttrAccessibleAfterFirstUnlock
-        keychainItem[kSecAttrAccount as Any] = key
-        keychainItem[kSecAttrService as Any] = service
-        val result = SecItemCopyMatching(keychainItem as CFDictionaryRef, null)
-        if (result.toUInt() != noErr) {
-            return null
-        }
-        val resultDict = result as NSDictionary
-        val data = resultDict.valueForKey(kSecValueData.toString()) as NSData
-        return data.toString()
-    }
+object DeviceInfoFactory {
 
     fun setValue(value: String, forUserDefaultsKey: String) {
         NSUserDefaults.standardUserDefaults.setObject(value, forKey = forUserDefaultsKey)
         NSUserDefaults.standardUserDefaults.synchronize()
     }
 
-     fun valueForUserDefaultsKey(key: String): String? {
-        return NSUserDefaults.standardUserDefaults.objectForKey(key) as? String
-    }
+    private fun keychainItemForKey(key: String, service: String): CFMutableDictionaryRef? {
+        memScoped {
+            val keychainItem = CFDictionaryCreateMutable(null, 4, null, null)
+            val cfKey = CFBridgingRetain(key as NSString) as CFStringRef
+            val cfService = CFBridgingRetain(service as NSString) as CFStringRef
 
-     fun keychainItemForKey(key: String, service: String): NSMutableDictionary {
-        val keychainItem = mutableMapOf<Any?, Any?>()
-        keychainItem[kSecClass as Any] = kSecClassGenericPassword
-        keychainItem[kSecAttrAccessible as Any] = kSecAttrAccessibleAfterFirstUnlock
-        keychainItem[kSecAttrAccount as Any] = key
-        keychainItem[kSecAttrService as Any] = service
-        return keychainItem as NSMutableDictionary
+            CFDictionaryAddValue(keychainItem, kSecClass, kSecClassGenericPassword)
+            CFDictionaryAddValue(keychainItem, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlock)
+            CFDictionaryAddValue(keychainItem, kSecReturnData, cfKey)
+            CFDictionaryAddValue(keychainItem, kSecReturnAttributes, cfService)
+
+            return keychainItem
+        }
     }
 
     fun setValue(value: String, forKeychainKey: String, inService: String): Boolean {
         val keychainItem = keychainItemForKey(forKeychainKey, service = inService)
-        keychainItem.setValue(value, kSecValueData.toString())
+        CFDictionaryAddValue(keychainItem, kSecValueData, CFBridgingRetain(value as NSString) as CFStringRef)
         return SecItemAdd(keychainItem as CFDictionaryRef, null) == errSecSuccess
     }
 
-    fun updateValue(value: String, forKeychainKey: String, inService: String): Boolean {
-        val query = mutableMapOf(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrAccount to forKeychainKey,
-            kSecAttrService to inService
-        )
-        val attributesToUpdate = mutableMapOf(
-            kSecValueData to value
-        )
-        return SecItemUpdate(
-            query as CFDictionaryRef,
-            attributesToUpdate as CFDictionaryRef
-        ) == errSecSuccess
-    }
+     private var hasListeners: Boolean = false
 
-    fun deleteValue(forKeychainKey: String, inService: String): Boolean {
-        val query = mutableMapOf(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrAccount to forKeychainKey,
-            kSecAttrService to inService
-        )
-        return SecItemDelete(query as CFDictionaryRef) == errSecSuccess
-    }
-
-     fun save() {
-        uid?.let { setValue(it, forUserDefaultsKey = UIDKey) }
-        uid?.let { setValue(it, forKeychainKey = UIDKey, inService = UIDKey) }
-    }
-
-     fun saveIfNeed() {
-        if (valueForUserDefaultsKey(UIDKey) == null) {
-            uid?.let { setValue(it, forUserDefaultsKey = UIDKey) }
-        }
-        if (valueForKeychainKey(UIDKey, service = UIDKey) == null) {
-            uid?.let { setValue(it, forKeychainKey = UIDKey, inService = UIDKey) }
-        }
-    }
-
-     fun randomUUID(): String {
-        if (NSClassFromString("NSUUID") != null) {
-            return NSUUID.UUID().UUIDString
-        }
-        val uuidRef = CFUUIDCreate(null)
-        val cfuuid = CFUUIDCreateString(null, uuidRef)
-        CFRelease(uuidRef)
-        val uuid = cfuuid.toString()
-        CFRelease(cfuuid)
-        return uuid
-    }
-
-     fun appleIFV(): String? {
-        if (NSClassFromString("UIDevice") != null && UIDevice.instancesRespondToSelector(
-                NSSelectorFromString("identifierForVendor")
-            )
-        ) {
-            // only available in iOS >= 6.0
-            return UIDevice.currentDevice.identifierForVendor?.UUIDString
-        }
-        return null
-    }
-
-     var hasListeners: Boolean = false
-
-    fun requiresMainQueueSetup() = false
-
-    fun supportedEvents(): Array<String> = arrayOf(
-        "RNDeviceInfo_batteryLevelDidChange",
-        "RNDeviceInfo_batteryLevelIsLow",
-        "RNDeviceInfo_powerStateDidChange",
-        "RNDeviceInfo_headphoneConnectionDidChange",
-        "RNDeviceInfo_brightnessDidChange"
-    )
-
-    fun constantsToExport(): Map<String, Any?> {
-        return mapOf(
-            "deviceId" to getDeviceId(),
-            "bundleId" to getBundleId(),
-            "systemName" to getSystemName(),
-            "systemVersion" to getSystemVersion(),
-            "appVersion" to getAppVersion(),
-            "buildNumber" to getBuildNumber(),
-            "isTablet" to isTablet(),
-            "appName" to getAppName(),
-            "brand" to "Apple",
-            "model" to getModel(),
-            "deviceType" to getDeviceTypeName(),
-            "isDisplayZoomed" to isDisplayZoomed(),
+    fun getInfoConstants(): InfoConstants {
+        return InfoConstants(
+            boardName = getDeviceId(),
+            bundleId = getBundleId(),
+            systemName = getSystemName(),
+            systemVersion = getSystemVersion(),
+            appVersion = getAppVersion(),
+            buildNumber = getBuildNumber(),
+            isTablet = isTablet(),
+            isLowRamDevice = null,
+            appName = getAppName() ?: "",
+            brand = "Apple",
+            model = getModel(),
+            deviceType = getDeviceType(),
         )
     }
 
-     fun getDeviceType(): DeviceType {
+     private fun getDeviceType(): DeviceType {
         return when (UIDevice.currentDevice.userInterfaceIdiom) {
             UIUserInterfaceIdiomPhone -> DeviceType.DeviceTypeHandset
             UIUserInterfaceIdiomPad -> {
@@ -243,7 +105,7 @@ object RNDeviceInfo {
         }
     }
 
-     fun getStorageDictionary(): NSDictionary? {
+     private fun getStorageDictionary(): NSDictionary? {
         val paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
         return (NSFileManager.defaultManager.attributesOfFileSystemForPath(
             paths.last().toString(),
@@ -251,11 +113,11 @@ object RNDeviceInfo {
         ) as? NSDictionary)
     }
 
-     fun getSystemName(): String {
+     private fun getSystemName(): String {
         return UIDevice.currentDevice.systemName
     }
 
-     fun getSystemVersion(): String {
+     private fun getSystemVersion(): String {
         return UIDevice.currentDevice.systemVersion
     }
 
@@ -267,26 +129,26 @@ object RNDeviceInfo {
         return UIScreen.mainScreen.scale != UIScreen.mainScreen.nativeScale
     }
 
-    fun getAppName(): String? {
+    private fun getAppName(): String? {
         val displayName =
             NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleDisplayName") as String?
         val bundleName = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleName") as String?
         return displayName ?: bundleName
     }
 
-    fun getBundleId(): String {
+    private fun getBundleId(): String {
         return NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleIdentifier") as String
     }
 
-    fun getAppVersion(): String {
+    private fun getAppVersion(): String {
         return NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as String
     }
 
-    fun getBuildNumber(): String {
+    private fun getBuildNumber(): String {
         return NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as String
     }
 
-    fun getDeviceNamesByCode(): Map<String, String> {
+    private fun getDeviceNamesByCode(): Map<String, String> {
         return mapOf(
             "iPod1,1" to "iPod Touch", // (Original)
             "iPod2,1" to "iPod Touch", // (Second Generation)
@@ -617,11 +479,6 @@ object RNDeviceInfo {
 //        sendEventWithName("RNDeviceInfo_powerStateDidChange", powerState)
 //    }
 
-     fun headphoneConnectionDidChange(notification: NSNotification): Boolean {
-        val isConnected = isHeadphonesConnected()
-        return isConnected
-    }
-
      fun brightnessDidChange(notification: NSNotification): Float {
         if (!hasListeners) {
             return 0f
@@ -629,24 +486,25 @@ object RNDeviceInfo {
         return getBrightness()
     }
 
-     val powerState: Map<String, Any?>
+     private val powerState: PowerState
         get() {
             floatArrayOf(getBatteryLevel())
-            return mapOf(
-                "batteryLevel" to getBatteryLevel(),
-                "batteryState" to when (UIDevice.currentDevice.batteryState) {
-                    UIDeviceBatteryState.UIDeviceBatteryStateUnknown -> "unknown"
-                    UIDeviceBatteryState.UIDeviceBatteryStateUnplugged -> "unplugged"
-                    UIDeviceBatteryState.UIDeviceBatteryStateCharging -> "charging"
-                    UIDeviceBatteryState.UIDeviceBatteryStateFull -> "full"
-                    else -> "none"
+
+            return PowerState(
+                getBatteryLevel(),
+                when (UIDevice.currentDevice.batteryState) {
+                    UIDeviceBatteryState.UIDeviceBatteryStateUnknown -> BatterState.UNKNOWN
+                    UIDeviceBatteryState.UIDeviceBatteryStateUnplugged -> BatterState.UNPLUGGED
+                    UIDeviceBatteryState.UIDeviceBatteryStateCharging -> BatterState.CHARGING
+                    UIDeviceBatteryState.UIDeviceBatteryStateFull -> BatterState.FULL
+                    else -> BatterState.UNKNOWN
                 },
-                "lowPowerMode" to NSProcessInfo.processInfo.isLowPowerModeEnabled()
+                NSProcessInfo.processInfo.isLowPowerModeEnabled()
             )
         }
 
     fun isBatteryCharging(): Boolean {
-        return powerState["batteryState"] == "charging"
+        return powerState.batteryState == BatterState.CHARGING
     }
 
     fun isLocationEnabled(): Boolean {
@@ -721,29 +579,30 @@ object RNDeviceInfo {
     }
 
     fun getFirstInstallTime(): Long {
-        val documentsFolderUrl = NSFileManager.defaultManager.URLsForDirectory(
-            NSDocumentDirectory,
-            NSUserDomainMask
-        ).last() as NSURL
-
-        val error = ObjCObjectVar<NSError?>(NSError.objcPtr()).ptr
-
-        val installDate = documentsFolderUrl.path?.let {
-            NSFileManager.defaultManager.attributesOfItemAtPath(
-                it,
-                error
-            )
-        }
-        return (installDate?.get(NSFileAttributeKey) as? NSDate)?.timeIntervalSince1970?.times(
-            1000
-        )?.toLong() ?: -1
+//        val documentsFolderUrl = NSFileManager.defaultManager.URLsForDirectory(
+//            NSDocumentDirectory,
+//            NSUserDomainMask
+//        ).last() as NSURL
+//
+//        val error = ObjCObjectVar<NSError?>(NSError.objcPtr()).ptr
+//
+//        val installDate = documentsFolderUrl.path?.let {
+//            NSFileManager.defaultManager.attributesOfItemAtPath(
+//                it,
+//                error
+//            )
+//        }
+//        return (installDate?.get(NSFileAttributeKey) as? NSDate)?.timeIntervalSince1970?.times(
+//            1000
+//        )?.toLong() ?: -1
+        return 0L
     }
 
     fun dealloc() {
         NSNotificationCenter.defaultCenter.removeObserver(this)
     }
     
-    fun getPowerState(): Map<String, Any?> {
+    fun getPowerState(): PowerState {
         return powerState
     }
 

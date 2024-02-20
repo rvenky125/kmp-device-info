@@ -1,64 +1,60 @@
 package com.famas.kmp_device_info
 
 actual class DeviceInfo {
-    actual fun isEmulator(): Boolean = RNDeviceInfo.isEmulator()
+    actual fun isEmulator(): Boolean = DeviceInfoFactory.isEmulator()
 
-    actual fun getFontScale(): Float = RNDeviceInfo.getFontScale()
+    actual fun getFontScale(): Float = DeviceInfoFactory.getFontScale()
 
-    actual fun isPinOrFingerprintSet(): Boolean = RNDeviceInfo.isPinOrFingerprintSet()
+    actual fun isPinOrFingerprintSet(): Boolean = DeviceInfoFactory.isPinOrFingerprintSet()
 
-    actual fun getIpAddress(): String? = RNDeviceInfo.getIpAddress()
+    actual fun getIpAddress(): String? = DeviceInfoFactory.getIpAddress()
 
     actual fun isCameraPresent(): Boolean? {
         throw NotAvailableToPlatformException
     }
 
     actual fun getMacAddress(): String {
-        return RNDeviceInfo.getMacAddress()
+        return DeviceInfoFactory.getMacAddress()
     }
 
     actual fun getCarrier(): String {
-        return RNDeviceInfo.getCarrier() ?: ""
+        return DeviceInfoFactory.getCarrier() ?: ""
     }
 
     actual fun getTotalDiskCapacity(): Double {
-        return RNDeviceInfo.getTotalDiskCapacity()
+        return DeviceInfoFactory.getTotalDiskCapacity()
     }
 
     actual fun getFreeDiskStorage(): Double {
-        return RNDeviceInfo.getFreeDiskStorage()
+        return DeviceInfoFactory.getFreeDiskStorage()
 
     }
 
     actual fun getTotalDiskCapacityOld(): Double {
-        return RNDeviceInfo.getTotalDiskCapacityOld()
+        return DeviceInfoFactory.getTotalDiskCapacityOld()
 
     }
 
     actual fun getFreeDiskStorageOld(): Double {
-        return RNDeviceInfo.getFreeDiskStorageOld()
+        return DeviceInfoFactory.getFreeDiskStorageOld()
 
     }
 
     actual fun isBatteryCharging(): Boolean {
-        return RNDeviceInfo.isBatteryCharging()
+        return DeviceInfoFactory.isBatteryCharging()
 
     }
 
     actual fun getUsedMemory(): Double {
-        return RNDeviceInfo.getUsedMemory().toDouble()
+        return DeviceInfoFactory.getUsedMemory().toDouble()
     }
 
-    actual fun getPowerState(): Map<String, Any> {
-        val map = RNDeviceInfo.getPowerState()
-        return map.mapValues {
-            it.value ?: ""
-        }
+    actual fun getPowerState(): PowerState? {
+        return DeviceInfoFactory.getPowerState()
     }
 
     actual fun getBatteryLevel(): Double {
-        return RNDeviceInfo.getBatteryLevel().toDouble()
-
+        return DeviceInfoFactory.getBatteryLevel().toDouble()
     }
 
     actual fun isAirplaneMode(): Boolean {
@@ -82,16 +78,16 @@ actual class DeviceInfo {
     }
 
     actual fun isLocationEnabled(): Boolean {
-        return RNDeviceInfo.isLocationEnabled()
+        return DeviceInfoFactory.isLocationEnabled()
     }
 
     actual fun isHeadphonesConnected(): Boolean {
-        return RNDeviceInfo.isHeadphonesConnected()
+        return DeviceInfoFactory.isHeadphonesConnected()
 
     }
 
     actual fun getAvailableLocationProviders(): Map<String, Boolean> {
-        return RNDeviceInfo.getAvailableLocationProviders() as Map<String, Boolean>
+        return DeviceInfoFactory.getAvailableLocationProviders() as Map<String, Boolean>
 
     }
 
@@ -100,12 +96,12 @@ actual class DeviceInfo {
     }
 
     actual fun getInstallerPackageName(): String {
-        return RNDeviceInfo.getInstallerPackageName()
+        return DeviceInfoFactory.getInstallerPackageName()
 
     }
 
     actual fun getFirstInstallTime(): Double {
-        return RNDeviceInfo.getFirstInstallTime().toDouble()
+        return DeviceInfoFactory.getFirstInstallTime().toDouble()
 
     }
 
@@ -114,7 +110,7 @@ actual class DeviceInfo {
     }
 
     actual fun getDeviceName(): String {
-        return RNDeviceInfo.getDeviceName()
+        return DeviceInfoFactory.getDeviceName()
 
     }
 
@@ -127,7 +123,7 @@ actual class DeviceInfo {
     }
 
     actual fun getBuildId(): String {
-        return RNDeviceInfo.getBuildId()
+        return DeviceInfoFactory.getBuildId()
 
     }
 
@@ -173,20 +169,20 @@ actual class DeviceInfo {
     }
 
     actual fun getSystemManufacturer(): String {
-        return RNDeviceInfo.getSystemManufacturer()
+        return DeviceInfoFactory.getSystemManufacturer()
     }
 
     actual fun isDisplayZoomed(): Boolean {
-        return RNDeviceInfo.isDisplayZoomed()
+        return DeviceInfoFactory.isDisplayZoomed()
     }
 
     actual suspend fun getDeviceToken(): String? {
-        return RNDeviceInfo.getDeviceToken()
+        return DeviceInfoFactory.getDeviceToken()
     }
 
 
     actual fun getBrightness(): Float {
-        return RNDeviceInfo.getBrightness()
+        return DeviceInfoFactory.getBrightness()
     }
 
     actual fun getCodename(): String {
@@ -198,7 +194,7 @@ actual class DeviceInfo {
     }
 
     actual fun getUniqueId(): String {
-        return RNDeviceInfo.getUniqueId().toString()
+        return DeviceInfoFactory.getUniqueId().toString()
 
     }
 
@@ -211,7 +207,7 @@ actual class DeviceInfo {
     }
 
     actual fun getTotalMemory(): Double {
-        return RNDeviceInfo.getTotalMemory()
+        return DeviceInfoFactory.getTotalMemory()
 
     }
 
@@ -232,7 +228,7 @@ actual class DeviceInfo {
     }
 
     actual suspend fun getUserAgent(): String? {
-        return RNDeviceInfo.getUserAgent()
+        return DeviceInfoFactory.getUserAgent()
     }
 
     actual fun getPhoneNumber(): String {
@@ -240,7 +236,7 @@ actual class DeviceInfo {
     }
 
     actual fun getSupportedAbis(): List<String> {
-        return RNDeviceInfo.getSupportedAbis().toList()
+        return DeviceInfoFactory.getSupportedAbis().toList()
 
     }
 
@@ -254,5 +250,9 @@ actual class DeviceInfo {
 
     actual fun getSupportedMediaTypeList(): List<String> {
         throw NotAvailableToPlatformException
+    }
+
+    actual fun getInfoConstants(): InfoConstants {
+        return DeviceInfoFactory.getInfoConstants()
     }
 }

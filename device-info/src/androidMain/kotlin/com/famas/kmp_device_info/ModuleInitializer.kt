@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.startup.Initializer
 
 @Suppress("UNUSED")
-class ModuleInitializer: Initializer<Int> {
+class ModuleInitializer : Initializer<Int> {
     override fun create(context: Context): Int {
         DeviceInfo(context)
         return 0

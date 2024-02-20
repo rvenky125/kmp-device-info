@@ -85,7 +85,8 @@ class DeviceUID {
                 return null
             }
             val resultDict = result as NSDictionary
-            val data = kSecValueData?.cfToKotlinString()?.let { resultDict.valueForKey(it) } as NSData
+            val data =
+                kSecValueData?.cfToKotlinString()?.let { resultDict.valueForKey(it) } as NSData
             return data.toString()
         }
     }
@@ -102,7 +103,8 @@ class DeviceUID {
     private fun keychainItemForKey(key: String, service: String): NSMutableDictionary {
         val keychainItem = NSMutableDictionary()
         kSecClass?.cfToKotlinString()?.let { keychainItem.setValue(kSecClassGenericPassword, it) }
-        kSecAttrAccessible?.cfToKotlinString()?.let { keychainItem.setValue(kSecAttrAccessibleAfterFirstUnlock, it) }
+        kSecAttrAccessible?.cfToKotlinString()
+            ?.let { keychainItem.setValue(kSecAttrAccessibleAfterFirstUnlock, it) }
         kSecAttrAccount?.cfToKotlinString()?.let { keychainItem.setValue(key, it) }
         kSecAttrService?.cfToKotlinString()?.let { keychainItem.setValue(service, it) }
         return keychainItem
@@ -124,7 +126,10 @@ class DeviceUID {
         kSecValueData?.cfToKotlinString()?.let {
             attributesToUpdate.setValue(value, it)
         }
-        return SecItemUpdate(CFBridgingRetain(query) as CFDictionaryRef, CFBridgingRetain(attributesToUpdate) as CFDictionaryRef) == errSecSuccess
+        return SecItemUpdate(
+            CFBridgingRetain(query) as CFDictionaryRef,
+            CFBridgingRetain(attributesToUpdate) as CFDictionaryRef
+        ) == errSecSuccess
     }
 
     fun deleteValue(forKeychainKey: String, inService: String): Boolean {
@@ -165,7 +170,8 @@ class DeviceUID {
     private fun appleIFV(): String? {
         if (NSClassFromString("UIDevice") != null && UIDevice.instancesRespondToSelector(
                 NSSelectorFromString("identifierForVendor")
-            )) {
+            )
+        ) {
             // only available in iOS >= 6.0
             return UIDevice.currentDevice.identifierForVendor?.UUIDString
         }
@@ -175,8 +181,10 @@ class DeviceUID {
 
 private val UIDKey = "deviceUID"
 private val kCFBooleanTrue = true
+
 @OptIn(ExperimentalForeignApi::class)
 private val kSecClassGenericPassword = kSecClass
+
 @OptIn(ExperimentalForeignApi::class)
 private val kSecAttrAccessibleAfterFirstUnlock = kSecAttrAccessible
 private const val noErr = 0

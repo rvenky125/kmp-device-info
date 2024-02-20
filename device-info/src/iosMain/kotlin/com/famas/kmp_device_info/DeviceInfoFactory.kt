@@ -13,24 +13,75 @@ import platform.AVFAudio.AVAudioSessionPortBluetoothHFP
 import platform.AVFAudio.AVAudioSessionPortDescription
 import platform.AVFAudio.AVAudioSessionPortHeadphones
 import platform.AVFAudio.currentRoute
-import platform.CoreFoundation.*
-import platform.CoreLocation.*
+import platform.CoreFoundation.CFDictionaryAddValue
+import platform.CoreFoundation.CFDictionaryCreateMutable
+import platform.CoreFoundation.CFDictionaryRef
+import platform.CoreFoundation.CFMutableDictionaryRef
+import platform.CoreFoundation.CFStringRef
+import platform.CoreLocation.CLLocationManager
 import platform.CoreTelephony.CTTelephonyNetworkInfo
 import platform.DeviceCheck.DCDevice
-import platform.Foundation.*
+import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSBundle
+import platform.Foundation.NSDataBase64EncodingEndLineWithLineFeed
+import platform.Foundation.NSDictionary
+import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileSystemFreeSize
+import platform.Foundation.NSFileSystemSize
+import platform.Foundation.NSMutableData
+import platform.Foundation.NSNotification
+import platform.Foundation.NSNotificationCenter
+import platform.Foundation.NSNumber
+import platform.Foundation.NSProcessInfo
+import platform.Foundation.NSSearchPathForDirectoriesInDomains
+import platform.Foundation.NSString
+import platform.Foundation.NSUserDefaults
+import platform.Foundation.NSUserDomainMask
+import platform.Foundation.base64EncodedStringWithOptions
+import platform.Foundation.isLowPowerModeEnabled
+import platform.Foundation.isiOSAppOnMac
 import platform.LocalAuthentication.LAContext
 import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthentication
-import platform.Security.*
-import platform.UIKit.*
+import platform.Security.SecItemAdd
+import platform.Security.errSecSuccess
+import platform.Security.kSecAttrAccessible
+import platform.Security.kSecAttrAccessibleAfterFirstUnlock
+import platform.Security.kSecClass
+import platform.Security.kSecClassGenericPassword
+import platform.Security.kSecReturnAttributes
+import platform.Security.kSecReturnData
+import platform.Security.kSecValueData
+import platform.UIKit.UIDevice
+import platform.UIKit.UIDeviceBatteryState
+import platform.UIKit.UIScreen
+import platform.UIKit.UIUserInterfaceIdiomMac
+import platform.UIKit.UIUserInterfaceIdiomPad
+import platform.UIKit.UIUserInterfaceIdiomPhone
+import platform.UIKit.UIUserInterfaceIdiomTV
 import platform.WebKit.WKWebView
 import platform.darwin.TARGET_IPHONE_SIMULATOR
 import platform.darwin.TARGET_OS_MACCATALYST
 import platform.darwin.sysctlbyname
 import platform.posix.uname
 import platform.posix.utsname
+import kotlin.Array
+import kotlin.Boolean
+import kotlin.Double
+import kotlin.Exception
+import kotlin.Float
+import kotlin.IllegalStateException
+import kotlin.Long
+import kotlin.OptIn
+import kotlin.String
+import kotlin.TODO
+import kotlin.arrayOf
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlin.floatArrayOf
+import kotlin.to
+import kotlin.toString
 
 @OptIn(ExperimentalForeignApi::class)
 object DeviceInfoFactory {
@@ -47,7 +98,11 @@ object DeviceInfoFactory {
             val cfService = CFBridgingRetain(service as NSString) as CFStringRef
 
             CFDictionaryAddValue(keychainItem, kSecClass, kSecClassGenericPassword)
-            CFDictionaryAddValue(keychainItem, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlock)
+            CFDictionaryAddValue(
+                keychainItem,
+                kSecAttrAccessible,
+                kSecAttrAccessibleAfterFirstUnlock
+            )
             CFDictionaryAddValue(keychainItem, kSecReturnData, cfKey)
             CFDictionaryAddValue(keychainItem, kSecReturnAttributes, cfService)
 
@@ -57,11 +112,15 @@ object DeviceInfoFactory {
 
     fun setValue(value: String, forKeychainKey: String, inService: String): Boolean {
         val keychainItem = keychainItemForKey(forKeychainKey, service = inService)
-        CFDictionaryAddValue(keychainItem, kSecValueData, CFBridgingRetain(value as NSString) as CFStringRef)
+        CFDictionaryAddValue(
+            keychainItem,
+            kSecValueData,
+            CFBridgingRetain(value as NSString) as CFStringRef
+        )
         return SecItemAdd(keychainItem as CFDictionaryRef, null) == errSecSuccess
     }
 
-     private var hasListeners: Boolean = false
+    private var hasListeners: Boolean = false
 
     fun getInfoConstants(): InfoConstants {
         return InfoConstants(
@@ -80,32 +139,32 @@ object DeviceInfoFactory {
         )
     }
 
-     private fun getDeviceType(): DeviceType {
+    private fun getDeviceType(): DeviceType {
         return when (UIDevice.currentDevice.userInterfaceIdiom) {
-            UIUserInterfaceIdiomPhone -> DeviceType.DeviceTypeHandset
+            UIUserInterfaceIdiomPhone -> DeviceType.HANDSET
             UIUserInterfaceIdiomPad -> {
                 if (TARGET_OS_MACCATALYST == 1) {
-                    return DeviceType.DeviceTypeDesktop
+                    return DeviceType.DESKTOP
                 }
 
                 return if (UIDevice.currentDevice.systemVersion.toFloat() <= 14.0f) {
                     if (NSProcessInfo.processInfo.isiOSAppOnMac()) {
-                        DeviceType.DeviceTypeDesktop
+                        DeviceType.DESKTOP
                     } else {
-                        DeviceType.DeviceTypeTablet
+                        DeviceType.TABLET
                     }
                 } else {
-                    DeviceType.DeviceTypeTablet
+                    DeviceType.TABLET
                 }
             }
 
-            UIUserInterfaceIdiomTV -> DeviceType.DeviceTypeTv
-            UIUserInterfaceIdiomMac -> DeviceType.DeviceTypeDesktop
-            else -> DeviceType.DeviceTypeUnknown
+            UIUserInterfaceIdiomTV -> DeviceType.TV
+            UIUserInterfaceIdiomMac -> DeviceType.DESKTOP
+            else -> DeviceType.UNKNOWN
         }
     }
 
-     private fun getStorageDictionary(): NSDictionary? {
+    private fun getStorageDictionary(): NSDictionary? {
         val paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
         return (NSFileManager.defaultManager.attributesOfFileSystemForPath(
             paths.last().toString(),
@@ -113,11 +172,11 @@ object DeviceInfoFactory {
         ) as? NSDictionary)
     }
 
-     private fun getSystemName(): String {
+    private fun getSystemName(): String {
         return UIDevice.currentDevice.systemName
     }
 
-     private fun getSystemVersion(): String {
+    private fun getSystemVersion(): String {
         return UIDevice.currentDevice.systemVersion
     }
 
@@ -273,7 +332,7 @@ object DeviceInfoFactory {
         )
     }
 
-     fun getModel(): String {
+    fun getModel(): String {
         val deviceId = getDeviceId()
         val deviceNamesByCode = getDeviceNamesByCode()
         val deviceName = deviceNamesByCode[deviceId]
@@ -304,7 +363,7 @@ object DeviceInfoFactory {
         return if (status != 0) "unknown" else buffer.bytes().toString()
     }
 
-     fun uniqueId(): String? {
+    fun uniqueId(): String? {
         return DeviceUID().uid()
     }
 
@@ -316,7 +375,7 @@ object DeviceInfoFactory {
         return DeviceUID().syncUid()
     }
 
-     fun getDeviceId(): String {
+    fun getDeviceId(): String {
         memScoped {
             val systemInfo: utsname = alloc()
             uname(systemInfo.ptr)
@@ -328,8 +387,8 @@ object DeviceInfoFactory {
         return TARGET_IPHONE_SIMULATOR == 1
     }
 
-     fun isTablet(): Boolean {
-        return getDeviceType() == DeviceType.DeviceTypeTablet
+    fun isTablet(): Boolean {
+        return getDeviceType() == DeviceType.TABLET
     }
 
     suspend fun getDeviceToken(): String? {
@@ -367,7 +426,7 @@ object DeviceInfoFactory {
         var contentSize: String? = null
         val deviceType = getDeviceType()
         val isPreferredContentSizeCategory =
-            ((deviceType == DeviceType.DeviceTypeHandset || deviceType == DeviceType.DeviceTypeTv || deviceType == DeviceType.DeviceTypeTablet) && UIDevice.currentDevice.systemVersion.toFloat() >= 10.0) || ((deviceType == DeviceType.DeviceTypeUnknown || deviceType == DeviceType.DeviceTypeDesktop) && UIDevice.currentDevice.systemVersion.toFloat() >= 13.0)
+            ((deviceType == DeviceType.HANDSET || deviceType == DeviceType.TV || deviceType == DeviceType.TABLET) && UIDevice.currentDevice.systemVersion.toFloat() >= 10.0) || ((deviceType == DeviceType.UNKNOWN || deviceType == DeviceType.DESKTOP) && UIDevice.currentDevice.systemVersion.toFloat() >= 13.0)
         if (isPreferredContentSizeCategory) {
             contentSize = traitCollection.preferredContentSizeCategory
         }
@@ -403,7 +462,7 @@ object DeviceInfoFactory {
         return (storage?.objectForKey(NSFileSystemFreeSize) as NSNumber).doubleValue
     }
 
-     fun getDeviceTypeName(): String {
+    fun getDeviceTypeName(): String {
         return getDeviceType().name
     }
 
@@ -479,14 +538,14 @@ object DeviceInfoFactory {
 //        sendEventWithName("RNDeviceInfo_powerStateDidChange", powerState)
 //    }
 
-     fun brightnessDidChange(notification: NSNotification): Float {
+    fun brightnessDidChange(notification: NSNotification): Float {
         if (!hasListeners) {
             return 0f
         }
         return getBrightness()
     }
 
-     private val powerState: PowerState
+    private val powerState: PowerState
         get() {
             floatArrayOf(getBatteryLevel())
 
@@ -601,7 +660,7 @@ object DeviceInfoFactory {
     fun dealloc() {
         NSNotificationCenter.defaultCenter.removeObserver(this)
     }
-    
+
     fun getPowerState(): PowerState {
         return powerState
     }
@@ -627,5 +686,5 @@ object DeviceInfoFactory {
     }
 
     val UIDKey = "deviceUID"
-     val kCFBooleanTrue: Boolean = true
+    val kCFBooleanTrue: Boolean = true
 }

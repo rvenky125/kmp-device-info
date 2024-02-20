@@ -11,19 +11,19 @@ import kotlin.math.sqrt
 
 class DeviceTypeResolver(private val context: Context) {
     val isTablet: Boolean
-        get() = deviceType == DeviceType.DeviceTypeTablet
+        get() = deviceType == DeviceType.TABLET
     val deviceType: DeviceType
         get() {
             // Detect TVs via ui mode (Android TVs) or system features (Fire TV).
             if (context.packageManager.hasSystemFeature("amazon.hardware.fire_tv")) {
-                return DeviceType.DeviceTypeTv
+                return DeviceType.TV
             }
             val uiManager = context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
             if (uiManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-                return DeviceType.DeviceTypeTv
+                return DeviceType.TV
             }
             val deviceTypeFromConfig = deviceTypeFromResourceConfiguration
-            return if (deviceTypeFromConfig != DeviceType.DeviceTypeUnknown) {
+            return if (deviceTypeFromConfig != DeviceType.UNKNOWN) {
                 deviceTypeFromConfig
             } else deviceTypeFromPhysicalSize
         }
@@ -32,9 +32,9 @@ class DeviceTypeResolver(private val context: Context) {
         get() {
             val smallestScreenWidthDp = context.resources.configuration.smallestScreenWidthDp
             if (smallestScreenWidthDp == Configuration.SMALLEST_SCREEN_WIDTH_DP_UNDEFINED) {
-                return DeviceType.DeviceTypeUnknown
+                return DeviceType.UNKNOWN
             }
-            return if (smallestScreenWidthDp >= 600) DeviceType.DeviceTypeTablet else DeviceType.DeviceTypeHandset
+            return if (smallestScreenWidthDp >= 600) DeviceType.TABLET else DeviceType.HANDSET
         }
     private val deviceTypeFromPhysicalSize: DeviceType
         get() {
@@ -52,13 +52,13 @@ class DeviceTypeResolver(private val context: Context) {
             val diagonalSizeInches = sqrt(widthInches.pow(2.0) + heightInches.pow(2.0))
             return if (diagonalSizeInches in 3.0..6.9) {
                 // Devices in a sane range for phones are considered to be Handsets.
-                DeviceType.DeviceTypeHandset
+                DeviceType.HANDSET
             } else if (diagonalSizeInches > 6.9 && diagonalSizeInches <= 18.0) {
                 // Devices larger than handset and in a sane range for tablets are tablets.
-                DeviceType.DeviceTypeTablet
+                DeviceType.TABLET
             } else {
                 // Otherwise, we don't know what device type we're on/
-                DeviceType.DeviceTypeUnknown
+                DeviceType.UNKNOWN
             }
         }
 }

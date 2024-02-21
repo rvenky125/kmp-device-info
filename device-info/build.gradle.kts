@@ -1,3 +1,6 @@
+import com.android.build.gradle.internal.scope.publishBuildArtifacts
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val libVersion = "v0.0.1-alpha"
 val gitName = "kmp-device-info"
 
@@ -12,12 +15,12 @@ plugins {
 
 kotlin {
     androidTarget {
+        publishLibraryVariants("release", "debug")
         compilations.all {
             kotlinOptions {
-                jvmTarget = "1.8"
+                jvmTarget = "11"
             }
         }
-        publishAllLibraryVariants()
     }
     iosX64()
     iosArm64()
@@ -56,10 +59,29 @@ android {
     }
 }
 
+tasks {
+    withType<KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+}
+
+afterEvaluate {
+    project.publishing.publications.withType(MavenPublication::class.java).forEach {
+        it.groupId = project.group.toString()
+    }
+}
+
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
 
 publishing {
     publications {
         withType<MavenPublication> {
+            artifact(javadocJar.get())
+
             groupId = "com.github.rvenky125"
             artifactId = gitName
             version = libVersion

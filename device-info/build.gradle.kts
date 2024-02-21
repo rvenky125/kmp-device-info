@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.androidLibrary)
 
     id("maven-publish")
+    id("signing")
 }
 
 kotlin {
@@ -16,6 +17,7 @@ kotlin {
                 jvmTarget = "1.8"
             }
         }
+        publishAllLibraryVariants()
     }
     iosX64()
     iosArm64()

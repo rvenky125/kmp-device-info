@@ -57,14 +57,12 @@ android {
 }
 
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                groupId = "com.github.rvenky125"
-                artifactId = gitName
-                version = libVersion
-            }
+publishing {
+    publications {
+        withType<MavenPublication> {
+            groupId = "com.github.rvenky125"
+            artifactId = gitName
+            version = libVersion
         }
     }
 }

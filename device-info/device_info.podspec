@@ -5,7 +5,7 @@ Pod::Spec.new do |spec|
     spec.source                   = { :http=> ''}
     spec.authors                  = ''
     spec.license                  = ''
-    spec.summary                  = 'Some description for the Shared Module'
+    spec.summary                  = 'This module provides device info'
     spec.vendored_frameworks      = 'build/cocoapods/framework/device_info.framework'
     spec.libraries                = 'c++'
     spec.ios.deployment_target = '16.0'

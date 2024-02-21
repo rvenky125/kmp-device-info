@@ -46,9 +46,9 @@ class DeviceIdResolver(private val context: Context) {
             setInstanceIdInPrefs(instanceId)
             return instanceId
         }
-    val uUIDInstanceId: String
+    private val uUIDInstanceId: String
         get() = UUID.randomUUID().toString()
-    val instanceIdFromPrefs: String?
+    private val instanceIdFromPrefs: String?
         get() {
             val prefs = getRNDISharedPreferences(
                 context
@@ -56,7 +56,7 @@ class DeviceIdResolver(private val context: Context) {
             return prefs.getString("instanceId", Build.UNKNOWN)
         }
 
-    fun setInstanceIdInPrefs(instanceId: String?) {
+    private fun setInstanceIdInPrefs(instanceId: String?) {
         val editor = getRNDISharedPreferences(
             context
         ).edit()

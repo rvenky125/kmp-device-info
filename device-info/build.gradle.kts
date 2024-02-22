@@ -9,8 +9,7 @@ plugins {
     alias(libs.plugins.kotlinCocoapods)
     alias(libs.plugins.androidLibrary)
 
-    id("maven-publish")
-    id("signing")
+    id("convention.publication")
 }
 
 kotlin {
@@ -18,7 +17,7 @@ kotlin {
         publishLibraryVariants("release", "debug")
         compilations.all {
             kotlinOptions {
-                jvmTarget = "11"
+                jvmTarget = "1.8"
             }
         }
     }
@@ -59,32 +58,18 @@ android {
     }
 }
 
-tasks {
-    withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "11"
-        }
-    }
-}
-
-afterEvaluate {
-    project.publishing.publications.withType(MavenPublication::class.java).forEach {
-        it.groupId = project.group.toString()
-    }
-}
-
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
-publishing {
-    publications {
-        withType<MavenPublication> {
-            artifact(javadocJar.get())
-
-            groupId = "com.github.rvenky125"
-            artifactId = gitName
-            version = libVersion
-        }
-    }
-}
+//val javadocJar by tasks.registering(Jar::class) {
+//    archiveClassifier.set("javadoc")
+//}
+//
+//publishing {
+//    publications {
+//        register<MavenPublication>("release")  {
+//            artifact(javadocJar.get())
+//
+//            groupId = "com.github.rvenky125"
+//            artifactId = gitName
+//            version = libVersion
+//        }
+//    }
+//}

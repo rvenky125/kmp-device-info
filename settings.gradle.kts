@@ -19,3 +19,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "kmp-device-info"
 include(":device-info")
+includeBuild("convention-plugins")

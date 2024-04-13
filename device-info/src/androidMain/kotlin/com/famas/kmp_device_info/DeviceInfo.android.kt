@@ -1072,4 +1072,8 @@ actual class DeviceInfo(private val context: Context) {
     actual suspend fun getDeviceToken(): String? {
         throw NotAvailableToPlatformException
     }
+
+    actual fun getPlatFormType(): PlatformType {
+        return PlatformType.ANDROID
+    }
 }

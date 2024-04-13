@@ -1,4 +1,4 @@
-package com.famas.arrow.kmp_device_info
+package com.famas.kmp_device_info
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ULongVar
@@ -46,9 +46,7 @@ import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthentication
 import platform.Security.SecItemAdd
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccessible
-import platform.Security.kSecAttrAccessibleAfterFirstUnlock
 import platform.Security.kSecClass
-import platform.Security.kSecClassGenericPassword
 import platform.Security.kSecReturnAttributes
 import platform.Security.kSecReturnData
 import platform.Security.kSecValueData

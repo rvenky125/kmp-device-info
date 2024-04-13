@@ -1,4 +1,4 @@
-package com.famas.arrow.kmp_device_info
+package com.famas.kmp_device_info
 
 import platform.Foundation.NSBundle
 import platform.Foundation.lastPathComponent

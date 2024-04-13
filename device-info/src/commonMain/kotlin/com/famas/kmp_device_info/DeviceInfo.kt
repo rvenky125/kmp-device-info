@@ -1,9 +1,9 @@
 package com.famas.kmp_device_info
 
-import kotlin.coroutines.cancellation.CancellationException
-
 expect class DeviceInfo {
     fun isEmulator(): Boolean
+
+    fun getPlatFormType(): PlatformType
 
     fun getFontScale(): Float
 

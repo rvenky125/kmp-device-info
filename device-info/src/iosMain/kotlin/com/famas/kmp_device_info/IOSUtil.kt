@@ -1,4 +1,4 @@
-package com.famas.arrow.kmp_device_info
+package com.famas.kmp_device_info
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CoreFoundation.CFStringRef

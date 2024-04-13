@@ -1,6 +1,6 @@
 package com.famas.kmp_device_info
 
-object NotAvailableToPlatformException : Exception("The feature not available for this platform")
+object NotAvailableToPlatformException : Throwable("The feature not available for this platform")
 
 
 data class InfoConstants(

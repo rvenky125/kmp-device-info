@@ -1,18 +1,22 @@
 name: Build and Publish to MC
-
 on:
   push:
-    tags: [ "v*" ]
+    tags:
+      - 'v*'
 
 jobs:
   build:
+    name: Build
     runs-on: macos-latest
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Install Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '2.7'
+
       - name: Install Cocoapods
         run: |
           gem install cocoapods
@@ -22,13 +26,19 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: actions/cache@v3
+
+      - name: Cache Gradle and wrapper
+        uses: actions/cache@v3
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('build.gradle') }}
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
       - name: Build and publish to maven central
         run: ./gradlew publishKotlinMultiplatformPublicationToMavenCentralRepository

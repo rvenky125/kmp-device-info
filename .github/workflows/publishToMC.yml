@@ -1,8 +1,8 @@
 name: Build and Publish to MC
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
 
 jobs:
   build:
@@ -17,15 +17,14 @@ jobs:
         with:
           ruby-version: '2.7'
 
-      - name: Install Cocoapods
+      - name: Install Cocoapods 🌴
         run: |
           gem install cocoapods
 
-      - name: Set up JDK
+      - name: Set up JDK 🍵
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'temurin'
 
       - name: Cache Gradle and wrapper
         uses: actions/cache@v3
@@ -40,5 +39,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build and publish to maven central
-        run: ./gradlew publishKotlinMultiplatformPublicationToMavenCentralRepository
+      - name: 🏗 Build with Gradle 🛠️
+        run: ./gradlew build --stacktrace
+
+      - name: Publish Library on Maven Central 🚀
+        run: ./gradlew publishKotlinMultiplatformPublicationToMavenCentralRepository --no-configuration-cache

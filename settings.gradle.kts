@@ -13,10 +13,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { setUrl("https://jitpack.io") }
     }
 }
 
 rootProject.name = "kmp-device-info"
 include(":device-info")
-includeBuild("convention-plugins")

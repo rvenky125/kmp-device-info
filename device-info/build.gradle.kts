@@ -1,15 +1,17 @@
-import com.android.build.gradle.internal.scope.publishBuildArtifacts
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinMultiplatform
+import com.vanniktech.maven.publish.SonatypeHost
 
 val libVersion = "v0.0.1-alpha"
-val gitName = "kmp-device-info"
+val artifactId = "kmp-device-info"
+val groupId = "io.github.rvenky125"
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinCocoapods)
     alias(libs.plugins.androidLibrary)
-
-    id("convention.publication")
+    id("org.jetbrains.dokka")
+    id("com.vanniktech.maven.publish")
 }
 
 kotlin {
@@ -40,9 +42,8 @@ kotlin {
         androidMain.dependencies {
             implementation("androidx.startup:startup-runtime:1.1.1")
         }
-
         commonMain.dependencies {
-            //put your multiplatform dependencies here
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -56,20 +57,52 @@ android {
     defaultConfig {
         minSdk = 21
     }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }
 
-//val javadocJar by tasks.registering(Jar::class) {
-//    archiveClassifier.set("javadoc")
-//}
-//
-//publishing {
-//    publications {
-//        register<MavenPublication>("release")  {
-//            artifact(javadocJar.get())
-//
-//            groupId = "com.github.rvenky125"
-//            artifactId = gitName
-//            version = libVersion
-//        }
-//    }
-//}
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    configure(
+        KotlinMultiplatform(
+            javadocJar = JavadocJar.Empty(),
+            sourcesJar = true,
+            androidVariantsToPublish = listOf("debug", "release")
+        )
+    )
+
+    coordinates(groupId, artifactId, libVersion)
+
+    pom {
+        name.set("KMP Device Info Library")
+        description.set("It brings all device info functions.")
+        inceptionYear.set("2024")
+        url.set("https://github.com/rvenky125/kmp-device-info/")
+
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                distribution.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+        developers {
+            developer {
+                id.set("rvenky125")
+                name.set("Venkatesh Paithireddy")
+                url.set("https://github.com/rvenky125/")
+            }
+        }
+        scm {
+            url.set("https://github.com/rvenky125/kmp-device-info")
+            connection.set("scm:git:git://github.com/rvenky125/kmp-device-info.git")
+            developerConnection.set("scm:git:ssh://git@github.com/rvenky125/kmp-device-info.git")
+        }
+    }
+
+    signAllPublications()
+}

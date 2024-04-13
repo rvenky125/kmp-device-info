@@ -46,8 +46,5 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: 🏗 Build with Gradle 🛠️
-        run: ./gradlew build --stacktrace
-
       - name: Publish Library on Maven Central 🚀
         run: ./gradlew publishKotlinMultiplatformPublicationToMavenCentralRepository --no-configuration-cache

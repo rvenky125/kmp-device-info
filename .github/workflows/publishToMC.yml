@@ -8,9 +8,18 @@ jobs:
   build:
     name: Build
     runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up JDK 🍵
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
 
       - name: Install Ruby
         uses: ruby/setup-ruby@v1
@@ -21,20 +30,18 @@ jobs:
         run: |
           gem install cocoapods
 
-      - name: Set up JDK 🍵
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
 
-      - name: Cache Gradle and wrapper
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+#      - name: Cache Gradle and wrapper
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+#          restore-keys: |
+#            ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

@@ -1,4 +1,4 @@
-package com.famas.kmp_device_info
+package com.famas.arrow.kmp_device_info
 
 actual class DeviceInfo {
     actual fun isEmulator(): Boolean = DeviceInfoFactory.isEmulator()
@@ -240,6 +240,7 @@ actual class DeviceInfo {
 
     }
 
+
     actual fun getSupported32BitAbis(): List<String> {
         throw NotAvailableToPlatformException
     }
@@ -254,5 +255,9 @@ actual class DeviceInfo {
 
     actual fun getInfoConstants(): InfoConstants {
         return DeviceInfoFactory.getInfoConstants()
+    }
+
+    actual fun getPlatFormType(): String {
+        return "i"
     }
 }

@@ -1,4 +1,4 @@
-package com.famas.kmp_device_info
+package com.famas.arrow.kmp_device_info
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ULongVar
@@ -65,22 +65,9 @@ import platform.darwin.TARGET_OS_MACCATALYST
 import platform.darwin.sysctlbyname
 import platform.posix.uname
 import platform.posix.utsname
-import kotlin.Array
-import kotlin.Boolean
-import kotlin.Double
-import kotlin.Exception
-import kotlin.Float
-import kotlin.IllegalStateException
-import kotlin.Long
-import kotlin.OptIn
-import kotlin.String
-import kotlin.TODO
-import kotlin.arrayOf
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlin.floatArrayOf
-import kotlin.to
 import kotlin.toString
 
 @OptIn(ExperimentalForeignApi::class)

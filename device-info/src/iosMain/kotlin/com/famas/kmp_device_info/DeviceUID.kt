@@ -1,4 +1,4 @@
-package com.famas.kmp_device_info
+package com.famas.arrow.kmp_device_info
 
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -113,7 +113,7 @@ class DeviceUID {
     fun setValue(value: String, forKeychainKey: String, inService: String): Boolean {
         val keychainItem = keychainItemForKey(forKeychainKey, service = inService)
         keychainItem.setValue(value, kSecValueData.toString())
-        return SecItemAdd(keychainItem as CFDictionaryRef, null) == errSecSuccess
+        return SecItemAdd(CFBridgingRetain(keychainItem) as CFDictionaryRef, null) == errSecSuccess
     }
 
     fun updateValue(value: String, forKeychainKey: String, inService: String): Boolean {
@@ -183,8 +183,8 @@ private val UIDKey = "deviceUID"
 private val kCFBooleanTrue = true
 
 @OptIn(ExperimentalForeignApi::class)
-private val kSecClassGenericPassword = kSecClass
+val kSecClassGenericPassword = kSecClass
 
 @OptIn(ExperimentalForeignApi::class)
-private val kSecAttrAccessibleAfterFirstUnlock = kSecAttrAccessible
+val kSecAttrAccessibleAfterFirstUnlock = kSecAttrAccessible
 private const val noErr = 0

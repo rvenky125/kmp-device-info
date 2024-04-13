@@ -48,3 +48,9 @@ jobs:
 
       - name: Publish Library on Maven Central 🚀
         run: ./gradlew publishKotlinMultiplatformPublicationToMavenCentralRepository --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}

@@ -2,7 +2,7 @@ import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.SonatypeHost
 
-val libVersion = "0.0.1-alpha"
+val libVersion = "0.0.11-alpha"
 val artifactId = "kmp-device-info"
 val groupId = "io.github.rvenky125"
 

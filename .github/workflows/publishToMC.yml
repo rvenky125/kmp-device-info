@@ -47,7 +47,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew assemble
 
       - name: Publish Library on Maven Central 🚀
         run: ./gradlew publishKotlinMultiplatformPublicationToMavenCentralRepository --no-configuration-cache

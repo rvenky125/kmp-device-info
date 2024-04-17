@@ -1,8 +1,9 @@
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.GradleKpmIosX64Variant
 
-val libVersion = "0.0.11-alpha"
+val libVersion = "0.0.12-alpha"
 val artifactId = "kmp-device-info"
 val groupId = "io.github.rvenky125"
 
@@ -23,9 +24,17 @@ kotlin {
             }
         }
     }
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "kmp-device-info"
+            isStatic = true
+        }
+    }
 
     cocoapods {
         summary = "This module provides device info"
@@ -39,16 +48,27 @@ kotlin {
     }
 
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation("androidx.startup:startup-runtime:1.1.1")
+            }
+        }
+        val iosX64Main by getting
+        val iosArm64Main by getting
+        val iosSimulatorArm64Main by getting
+        val iosMain by creating {
+            dependsOn(commonMain)
+            iosX64Main.dependsOn(this)
+            iosArm64Main.dependsOn(this)
+            iosSimulatorArm64Main.dependsOn(this)
+        }
         androidMain.dependencies {
-            implementation("androidx.startup:startup-runtime:1.1.1")
         }
         commonMain.dependencies {
-
-        }
-        iosMain.dependencies {
-
-        }
-        iosTest.dependencies {
 
         }
         commonTest.dependencies {

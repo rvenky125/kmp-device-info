@@ -1,6 +1,7 @@
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.GradleKpmIosX64Variant
 
 val libVersion = "0.0.12-alpha"
@@ -93,14 +94,13 @@ android {
     }
 }
 
-
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     configure(
         KotlinMultiplatform(
             javadocJar = JavadocJar.Empty(),
             sourcesJar = true,
-            androidVariantsToPublish = listOf("debug", "release")
+            androidVariantsToPublish = listOf("debug", "release"),
         )
     )
 

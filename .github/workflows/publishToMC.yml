@@ -47,10 +47,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build
-        run: ./gradlew assemble
+        run: ./gradlew build
 
       - name: Publish Library on Maven Central 🚀
-        run: ./gradlew publishKotlinMultiplatformPublicationToMavenCentralRepository --no-configuration-cache
+        run: ./gradlew clean publish --no-daemon --no-parallel --no-configuration-cache --stacktrace
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.PASSWORD }}

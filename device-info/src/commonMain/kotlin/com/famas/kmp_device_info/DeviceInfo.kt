@@ -1,129 +1,133 @@
 package com.famas.kmp_device_info
 
+import kotlin.concurrent.Volatile
+
 expect class DeviceInfo {
-    fun isEmulator(): Boolean
+    companion object {
+        fun isEmulator(): Boolean
 
-    fun getPlatFormType(): PlatformType
+        fun getPlatFormType(): PlatformType
 
-    fun getFontScale(): Float
+        fun getFontScale(): Float
 
-    fun isPinOrFingerprintSet(): Boolean
+        fun isPinOrFingerprintSet(): Boolean
 
-    fun getIpAddress(): String?
+        fun getIpAddress(): String?
 
-    fun isCameraPresent(): Boolean?
+        fun isCameraPresent(): Boolean?
 
-    fun getMacAddress(): String
+        fun getMacAddress(): String
 
-    fun getCarrier(): String
+        fun getCarrier(): String
 
-    fun getTotalDiskCapacity(): Double
+        fun getTotalDiskCapacity(): Double
 
-    fun getFreeDiskStorage(): Double
+        fun getFreeDiskStorage(): Double
 
-    fun getTotalDiskCapacityOld(): Double
+        fun getTotalDiskCapacityOld(): Double
 
-    fun getFreeDiskStorageOld(): Double
+        fun getFreeDiskStorageOld(): Double
 
-    fun isBatteryCharging(): Boolean
+        fun isBatteryCharging(): Boolean
 
-    fun getUsedMemory(): Double
+        fun getUsedMemory(): Double
 
-    fun getPowerState(): PowerState?
+        fun getPowerState(): PowerState?
 
-    fun getBatteryLevel(): Double
+        fun getBatteryLevel(): Double
 
-    fun isAirplaneMode(): Boolean
+        fun isAirplaneMode(): Boolean
 
-    fun hasGms(): Boolean
+        fun hasGms(): Boolean
 
-    fun hasHms(): Boolean
+        fun hasHms(): Boolean
 
-    fun hasSystemFeature(feature: String?): Boolean
+        fun hasSystemFeature(feature: String?): Boolean
 
-    fun getSystemAvailableFeatures(): List<String>
+        fun getSystemAvailableFeatures(): List<String>
 
-    fun isLocationEnabled(): Boolean
+        fun isLocationEnabled(): Boolean
 
-    fun isHeadphonesConnected(): Boolean
+        fun isHeadphonesConnected(): Boolean
 
-    fun getAvailableLocationProviders(): Map<String, Boolean>
+        fun getAvailableLocationProviders(): Map<String, Boolean>
 
-    fun getInstallReferrer(): String?
+        fun getInstallReferrer(): String?
 
-    fun getInstallerPackageName(): String
+        fun getInstallerPackageName(): String
 
-    fun getFirstInstallTime(): Double
+        fun getFirstInstallTime(): Double
 
-    fun getLastUpdateTime(): Double
+        fun getLastUpdateTime(): Double
 
-    fun getDeviceName(): String
+        fun getDeviceName(): String
 
-    fun getSerialNumber(): String
+        fun getSerialNumber(): String
 
-    fun getDevice(): String
+        fun getDevice(): String
 
-    fun getBuildId(): String
+        fun getBuildId(): String
 
-    fun getApiLevel(): Int
+        fun getApiLevel(): Int
 
-    fun getBootloader(): String
+        fun getBootloader(): String
 
-    fun getDisplay(): String
+        fun getDisplay(): String
 
-    fun getFingerprint(): String
+        fun getFingerprint(): String
 
-    fun getHardware(): String
+        fun getHardware(): String
 
-    fun getHost(): String
+        fun getHost(): String
 
-    fun getProduct(): String
+        fun getProduct(): String
 
-    fun getTags(): String
+        fun getTags(): String
 
-    fun getType(): String
+        fun getType(): String
 
-    fun getSystemManufacturer(): String
+        fun getSystemManufacturer(): String
 
-    fun getCodename(): String
+        fun getCodename(): String
 
-    fun getIncremental(): String
+        fun getIncremental(): String
 
-    fun getUniqueId(): String
+        fun getUniqueId(): String
 
-    fun getAndroidId(): String
+        fun getAndroidId(): String
 
-    fun getMaxMemory(): Double
+        fun getMaxMemory(): Double
 
-    fun getTotalMemory(): Double
+        fun getTotalMemory(): Double
 
-    fun getInstanceId(): String?
+        fun getInstanceId(): String?
 
-    fun getBaseOs(): String
+        fun getBaseOs(): String
 
-    fun getPreviewSdkInt(): String
+        fun getPreviewSdkInt(): String
 
-    fun getSecurityPatch(): String
+        fun getSecurityPatch(): String
 
-    suspend fun getUserAgent(): String?
+        suspend fun getUserAgent(): String?
 
-    fun getPhoneNumber(): String
+        fun getPhoneNumber(): String
 
-    fun getSupportedAbis(): List<String>
+        fun getSupportedAbis(): List<String>
 
-    fun getSupported32BitAbis(): List<String>
+        fun getSupported32BitAbis(): List<String>
 
-    fun getSupported64BitAbis(): List<String>
+        fun getSupported64BitAbis(): List<String>
 
-    fun getSupportedMediaTypeList(): List<String>
+        fun getSupportedMediaTypeList(): List<String>
 
-    fun isLowRamDevice(): Boolean
+        fun isLowRamDevice(): Boolean
 
-    fun isDisplayZoomed(): Boolean
+        fun isDisplayZoomed(): Boolean
 
-    fun getBrightness(): Float
+        fun getBrightness(): Float
 
-    suspend fun getDeviceToken(): String?
+        suspend fun getDeviceToken(): String?
 
-    fun getInfoConstants(): InfoConstants
+        fun getInfoConstants(): InfoConstants
+    }
 }

@@ -4,7 +4,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.GradleKpmIosX64Variant
 
-val libVersion = "0.0.12-alpha"
+val libVersion = "0.0.13-alpha"
 val artifactId = "kmp-device-info"
 val groupId = "io.github.rvenky125"
 

@@ -2,7 +2,8 @@ package com.famas.kmp_device_info.resolver
 
 import android.content.Context
 import android.os.Build
-import com.famas.kmp_device_info.DeviceInfo.Companion.getRNDISharedPreferences
+import com.famas.kmp_device_info.DeviceInfo
+import com.famas.kmp_device_info.DeviceInfo.Companion.getSharePreferences
 import java.lang.reflect.InvocationTargetException
 import java.util.UUID
 
@@ -50,14 +51,14 @@ class DeviceIdResolver(private val context: Context) {
         get() = UUID.randomUUID().toString()
     private val instanceIdFromPrefs: String?
         get() {
-            val prefs = getRNDISharedPreferences(
+            val prefs = getSharePreferences(
                 context
             )
             return prefs.getString("instanceId", Build.UNKNOWN)
         }
 
     private fun setInstanceIdInPrefs(instanceId: String?) {
-        val editor = getRNDISharedPreferences(
+        val editor = getSharePreferences(
             context
         ).edit()
         editor.putString("instanceId", instanceId)

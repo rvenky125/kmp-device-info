@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -12,6 +13,7 @@ import android.content.SharedPreferences
 import android.content.pm.FeatureInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.hardware.camera2.CameraManager
 import android.location.LocationManager
 import android.media.AudioManager
@@ -40,19 +42,44 @@ import java.util.Collections
 @SuppressLint("StaticFieldLeak")
 actual class DeviceInfo {
     actual companion object {
+        private lateinit var deviceTypeResolver: DeviceTypeResolver
+        private lateinit var deviceIdResolver: DeviceIdResolver
         private lateinit var context: Context
-
-        private val deviceTypeResolver: DeviceTypeResolver = DeviceTypeResolver(context)
-        private val deviceIdResolver: DeviceIdResolver = DeviceIdResolver(context)
+        private lateinit var installReferrerClient: RNInstallReferrerClient
+        private lateinit var wifiManager: WifiManager
+        private lateinit var activityManager: ActivityManager
+        private lateinit var keyguardManager: KeyguardManager
+        private lateinit var cameraManager: CameraManager
+        private lateinit var telephonyManager: TelephonyManager
+        private lateinit var audioManager: AudioManager
+        private lateinit var locationManager: LocationManager
+        private lateinit var powerManager: PowerManager
+        private lateinit var packageManager: PackageManager
+        private lateinit var contentResolver: ContentResolver
         private var receiver: BroadcastReceiver? = null
         private var headphoneConnectionReceiver: BroadcastReceiver? = null
-        private val installReferrerClient: RNInstallReferrerClient =
-            RNInstallReferrerClient(context)
         private var mLastBatteryLevel = -1.0
         private var mLastBatteryState = BatterState.UNKNOWN
         private var mLastPowerSaveState = false
+        private var resources: Resources? = null
 
         fun initialize(context: Context) {
+            this.context = context
+            deviceTypeResolver = DeviceTypeResolver(context)
+            deviceIdResolver = DeviceIdResolver(context)
+            installReferrerClient = RNInstallReferrerClient(context)
+            wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+            cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            packageManager = context.packageManager
+            contentResolver = context.contentResolver
+            resources = context.resources
+
             val filter = IntentFilter()
             filter.addAction(Intent.ACTION_BATTERY_CHANGED)
             filter.addAction(Intent.ACTION_POWER_CONNECTED)
@@ -66,36 +93,19 @@ actual class DeviceInfo {
                     val powerSaveState: Boolean = powerState.isLowPowerMode
                     if ((mLastBatteryState != batteryState) || mLastPowerSaveState != powerSaveState
                     ) {
-//                    sendEvent(
-//                        context,
-//                        "RNDeviceInfo_powerStateDidChange",
-//                        batteryState
-//                    )
                         mLastBatteryState = batteryState
                         mLastPowerSaveState = powerSaveState
                     }
                     if (mLastBatteryLevel != batteryLevel) {
-//                    sendEvent(
-//                        context,
-//                        "RNDeviceInfo_batteryLevelDidChange",
-//                        batteryLevel
-//                    )
-//                    if (batteryLevel <= .15) {
-//                        sendEvent(
-//                            context,
-//                            "RNDeviceInfo_batteryLevelIsLow",
-//                            batteryLevel
-//                        )
-//                    }
                         mLastBatteryLevel = batteryLevel
                     }
                 }
             }
             context.registerReceiver(receiver, filter)
-            initializeHeadphoneConnectionReceiver()
+            initializeHeadphoneConnectionReceiver(context)
         }
 
-        private fun initializeHeadphoneConnectionReceiver() {
+        private fun initializeHeadphoneConnectionReceiver(context: Context) {
             val filter = IntentFilter()
             filter.addAction(AudioManager.ACTION_HEADSET_PLUG)
             filter.addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED)
@@ -103,34 +113,21 @@ actual class DeviceInfo {
                 override fun onReceive(context: Context, intent: Intent) {
                     val isConnected: Boolean = isHeadphonesConnectedSync
                     print(isConnected)
-//                sendEvent(
-//                    context,
-//                    "RNDeviceInfo_headphoneConnectionDidChange",
-//                    isConnected
-//                )
                 }
             }
             context.registerReceiver(headphoneConnectionReceiver, filter)
         }
 
-        fun onCatalystInstanceDestroy() {
+        fun onCatalystInstanceDestroy(context: Context) {
             context.unregisterReceiver(receiver)
             context.unregisterReceiver(headphoneConnectionReceiver)
         }
 
         private val wifiInfo: WifiInfo?
-            get() {
-                val manager = context.applicationContext
-                    .getSystemService(Context.WIFI_SERVICE) as WifiManager
-                return manager.connectionInfo
-            }
+            get() = wifiManager.connectionInfo
 
         actual fun isLowRamDevice(): Boolean {
-            val am =
-                context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            var isLowRamDevice = false
-            isLowRamDevice = am.isLowRamDevice
-            return isLowRamDevice
+            return activityManager.isLowRamDevice
         }
 
         actual fun getInfoConstants(): InfoConstants {
@@ -140,8 +137,8 @@ actual class DeviceInfo {
             try {
                 appVersion = packageInfo.versionName
                 buildNumber = packageInfo.versionCode.toString()
-                appName = context.applicationInfo
-                    .loadLabel(context.packageManager).toString()
+                appName = packageManager
+                    .getApplicationLabel(packageManager.getApplicationInfo(packageInfo.packageName, 0)).toString()
             } catch (e: Exception) {
                 appVersion = "unknown"
                 buildNumber = "unknown"
@@ -150,7 +147,7 @@ actual class DeviceInfo {
 
             return InfoConstants(
                 boardName = Build.BOARD,
-                bundleId = context.packageName,
+                bundleId = packageInfo.packageName,
                 systemName = "Android",
                 systemVersion = Build.VERSION.RELEASE,
                 appVersion = appVersion,
@@ -194,18 +191,14 @@ actual class DeviceInfo {
                 .contains("nox") || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
 
         private val fontScaleSync: Float
-            get() = context.resources.configuration.fontScale
+            get() = resources?.configuration?.fontScale ?: 1f
 
         actual fun getFontScale(): Float {
             return fontScaleSync
         }
 
         private val isPinOrFingerprintSetSync: Boolean
-            get() {
-                val keyguardManager =
-                    context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-                return keyguardManager.isKeyguardSecure
-            }
+            get() = keyguardManager.isKeyguardSecure
 
         actual fun isPinOrFingerprintSet(): Boolean {
             return isPinOrFingerprintSetSync
@@ -232,11 +225,8 @@ actual class DeviceInfo {
         @get:Suppress("deprecation")
         private val isCameraPresentSync: Boolean?
             get() = try {
-                val manager =
-
-                    context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
                 try {
-                    manager.cameraIdList.size > 0
+                    cameraManager.cameraIdList.size > 0
                 } catch (e: Exception) {
                     false
                 }
@@ -290,11 +280,7 @@ actual class DeviceInfo {
 
 
         private val carrierSync: String
-            get() {
-                val telMgr =
-                    context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                return telMgr.networkOperatorName
-            }
+            get() = telephonyManager.networkOperatorName
 
 
         actual fun getCarrier() = carrierSync
@@ -406,26 +392,22 @@ actual class DeviceInfo {
             return isBatteryChargingSync
         }
 
-
         val usedMemorySync: Double
             get() {
-                val actMgr =
-                    context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-                return if (actMgr != null) {
+                return try {
                     val pid = Process.myPid()
-                    val memInfos = actMgr.getProcessMemoryInfo(intArrayOf(pid))
+                    val memInfos = activityManager.getProcessMemoryInfo(intArrayOf(pid))
                     if (memInfos.size != 1) {
                         System.err.println("Unable to getProcessMemoryInfo. getProcessMemoryInfo did not return any info for the PID")
                         return (-1).toDouble()
                     }
                     val memInfo = memInfos[0]
                     memInfo.totalPss * 1024.0
-                } else {
+                } catch (e: Exception) {
                     System.err.println("Unable to getProcessMemoryInfo. ActivityManager was null")
                     (-1).toDouble()
                 }
             }
-
 
         actual fun getUsedMemory(): Double {
             return usedMemorySync
@@ -459,7 +441,6 @@ actual class DeviceInfo {
                 ) != 0
             }
 
-
         actual fun isAirplaneMode() = isAirplaneModeSync
 
         private fun hasGmsSync(): Boolean {
@@ -483,7 +464,6 @@ actual class DeviceInfo {
             }
         }
 
-
         actual fun hasGms() = hasGmsSync()
 
         private fun hasHmsSync(): Boolean {
@@ -506,7 +486,6 @@ actual class DeviceInfo {
             }
         }
 
-
         actual fun hasHms() = hasHmsSync()
 
         private fun hasSystemFeatureSync(feature: String?): Boolean {
@@ -515,11 +494,9 @@ actual class DeviceInfo {
             } else context.packageManager.hasSystemFeature(feature)
         }
 
-
         actual fun hasSystemFeature(feature: String?): Boolean {
             return hasSystemFeatureSync(feature)
         }
-
 
         val systemAvailableFeaturesSync: List<String>
             get() {
@@ -534,7 +511,6 @@ actual class DeviceInfo {
                 return promiseArray
             }
 
-
         actual fun getSystemAvailableFeatures(): List<String> {
             return systemAvailableFeaturesSync
         }
@@ -542,10 +518,8 @@ actual class DeviceInfo {
         private val isLocationEnabledSync: Boolean
             get() {
                 val locationEnabled: Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    val mLocationManager =
-                        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
                     try {
-                        mLocationManager.isLocationEnabled
+                        locationManager.isLocationEnabled
                     } catch (e: Exception) {
                         System.err.println("Unable to determine if location enabled. LocationManager was null")
                         return false
@@ -561,34 +535,26 @@ actual class DeviceInfo {
                 return locationEnabled
             }
 
-
         actual fun isLocationEnabled(): Boolean {
             return isLocationEnabledSync
         }
 
-
         val isHeadphonesConnectedSync: Boolean
             get() {
-                val audioManager =
-                    context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 return audioManager.isWiredHeadsetOn || audioManager.isBluetoothA2dpOn
             }
-
 
         actual fun isHeadphonesConnected(): Boolean {
             return isHeadphonesConnectedSync
         }
 
-
         private val availableLocationProvidersSync: Map<String, Boolean>
             get() {
-                val mLocationManager =
-                    context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
                 val providersAvailability = mutableMapOf<String, Boolean>()
                 try {
-                    val providers = mLocationManager.getProviders(false)
+                    val providers = locationManager.getProviders(false)
                     for (provider in providers) {
-                        providersAvailability[provider] = mLocationManager.isProviderEnabled(
+                        providersAvailability[provider] = locationManager.isProviderEnabled(
                             provider!!
                         )
                     }
@@ -598,11 +564,9 @@ actual class DeviceInfo {
                 return providersAvailability
             }
 
-
         actual fun getAvailableLocationProviders(): Map<String, Boolean> {
             return availableLocationProvidersSync
         }
-
 
         private val installReferrerSync: String?
             get() {
@@ -610,29 +574,25 @@ actual class DeviceInfo {
                 return sharedPref.getString("installReferrer", Build.UNKNOWN)
             }
 
-
         actual fun getInstallReferrer(): String? {
             return installReferrerSync
         }
 
         private val packageInfo: PackageInfo
-            get() = context.packageManager
-                .getPackageInfo(context.packageName, 0)
-
+            get() = packageManager
+                .getPackageInfo(packageInfo.packageName, 0)
 
         private val installerPackageNameSync: String
             get() {
-                val packageName: String = context.packageName
-                return context.packageManager
+                val packageName: String = packageInfo.packageName
+                return packageManager
                     .getInstallerPackageName(packageName)
                     ?: return "unknown"
             }
 
-
         actual fun getInstallerPackageName(): String {
             return installerPackageNameSync
         }
-
 
         private val firstInstallTimeSync: Double
             get() = try {
@@ -641,11 +601,9 @@ actual class DeviceInfo {
                 (-1).toDouble()
             }
 
-
         actual fun getFirstInstallTime(): Double {
             return firstInstallTimeSync
         }
-
 
         private val lastUpdateTimeSync: Double
             get() = try {
@@ -654,11 +612,9 @@ actual class DeviceInfo {
                 (-1).toDouble()
             }
 
-
         actual fun getLastUpdateTime(): Double {
             return lastUpdateTimeSync
         }
-
 
         val deviceNameSync: String
             get() {
@@ -687,11 +643,9 @@ actual class DeviceInfo {
                 return "unknown"
             }
 
-
         actual fun getDeviceName(): String {
             return deviceNameSync
         }
-
 
         @get:SuppressLint("HardwareIds", "MissingPermission")
         val serialNumberSync: String
@@ -713,137 +667,107 @@ actual class DeviceInfo {
                 return "unknown"
             }
 
-
         actual fun getSerialNumber(): String {
             return serialNumberSync
         }
 
-
         private val deviceSync: String
             get() = Build.DEVICE
-
 
         actual fun getDevice(): String {
             return deviceSync
         }
 
-
         val buildIdSync: String
             get() = Build.ID
-
 
         actual fun getBuildId(): String {
             return buildIdSync
         }
 
-
         val apiLevelSync: Int
             get() = Build.VERSION.SDK_INT
-
 
         actual fun getApiLevel(): Int {
             return apiLevelSync
         }
 
-
         private val bootloaderSync: String
             get() = Build.BOOTLOADER
-
 
         actual fun getBootloader(): String {
             return bootloaderSync
         }
 
-
         private val displaySync: String
             get() = Build.DISPLAY
-
 
         actual fun getDisplay(): String {
             return displaySync
         }
 
-
         val fingerprintSync: String
             get() = Build.FINGERPRINT
-
 
         actual fun getFingerprint(): String {
             return fingerprintSync
         }
 
-
         val hardwareSync: String
             get() = Build.HARDWARE
-
 
         actual fun getHardware(): String {
             return hardwareSync
         }
 
-
         val hostSync: String
             get() = Build.HOST
-
 
         actual fun getHost(): String {
             return hostSync
         }
 
-
         val productSync: String
             get() = Build.PRODUCT
-
 
         actual fun getProduct(): String {
             return productSync
         }
 
-
         val tagsSync: String
             get() = Build.TAGS
-
 
         actual fun getTags(): String {
             return tagsSync
         }
 
-
         val typeSync: String
             get() = Build.TYPE
-
 
         actual fun getType(): String {
             return typeSync
         }
 
-
         val systemManufacturerSync: String
             get() = Build.MANUFACTURER
-
 
         actual fun getSystemManufacturer(): String {
             return systemManufacturerSync
         }
 
-
         val codenameSync: String
             get() = Build.VERSION.CODENAME
-
 
         actual fun getCodename(): String {
             return codenameSync
         }
 
-
         val incrementalSync: String
             get() = Build.VERSION.INCREMENTAL
-
 
         actual fun getIncremental(): String {
             return incrementalSync
         }
-
 
         @get:SuppressLint("HardwareIds")
         val uniqueIdSync: String
@@ -852,40 +776,31 @@ actual class DeviceInfo {
                 Secure.ANDROID_ID
             )
 
-
         actual fun getUniqueId(): String {
             return uniqueIdSync
         }
-
 
         @get:SuppressLint("HardwareIds")
         val androidIdSync: String
             get() = uniqueIdSync
 
-
         actual fun getAndroidId(): String {
             return androidIdSync
         }
 
-
         private val maxMemorySync: Double
             get() = Runtime.getRuntime().maxMemory().toDouble()
-
 
         actual fun getMaxMemory(): Double {
             return maxMemorySync
         }
 
-
         private val totalMemorySync: Double
             get() {
-                val actMgr =
-                    context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                 val memInfo = ActivityManager.MemoryInfo()
-                actMgr.getMemoryInfo(memInfo)
+                activityManager.getMemoryInfo(memInfo)
                 return memInfo.totalMem.toDouble()
             }
-
 
         actual fun getTotalMemory(): Double {
             return totalMemorySync
@@ -894,44 +809,36 @@ actual class DeviceInfo {
         private val instanceIdSync: String?
             get() = deviceIdResolver.instanceIdSync
 
-
         actual fun getInstanceId(): String? {
             return instanceIdSync
         }
-
 
         private val baseOsSync: String
             get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Build.VERSION.BASE_OS
             } else "unknown"
 
-
         actual fun getBaseOs(): String {
             return baseOsSync
         }
-
 
         private val previewSdkIntSync: String
             get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Build.VERSION.PREVIEW_SDK_INT.toString()
             } else "unknown"
 
-
         actual fun getPreviewSdkInt(): String {
             return previewSdkIntSync
         }
-
 
         private val securityPatchSync: String
             get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Build.VERSION.SECURITY_PATCH
             } else "unknown"
 
-
         actual fun getSecurityPatch(): String {
             return securityPatchSync
         }
-
 
         private val userAgentSync: String?
             get() = try {
@@ -940,11 +847,9 @@ actual class DeviceInfo {
                 System.getProperty("http.agent")?.toString()
             }
 
-
         actual suspend fun getUserAgent(): String? {
             return userAgentSync
         }
-
 
         @get:SuppressLint("HardwareIds", "MissingPermission")
         val phoneNumberSync: String
@@ -956,26 +861,18 @@ actual class DeviceInfo {
                         Manifest.permission.READ_PHONE_NUMBERS
                     ) === PackageManager.PERMISSION_GRANTED)
                 ) {
-                    val telMgr =
-                        context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                    if (telMgr != null) {
-                        try {
-                            return telMgr.line1Number
-                        } catch (e: SecurityException) {
-                            System.err.println("getLine1Number called with permission, but threw anyway: " + e.message)
-                        }
-                    } else {
-                        System.err.println("Unable to getPhoneNumber. TelephonyManager was null")
+                    try {
+                        return telephonyManager.line1Number
+                    } catch (e: SecurityException) {
+                        System.err.println("getLine1Number called with permission, but threw anyway: " + e.message)
                     }
                 }
                 return "unknown"
             }
 
-
         actual fun getPhoneNumber(): String {
             return phoneNumberSync
         }
-
 
         val supportedAbisSync: List<String>
             get() {
@@ -986,11 +883,9 @@ actual class DeviceInfo {
                 return array
             }
 
-
         actual fun getSupportedAbis(): List<String> {
             return supportedAbisSync
         }
-
 
         private val supported32BitAbisSync: List<String>
             get() {
@@ -1001,11 +896,9 @@ actual class DeviceInfo {
                 return array
             }
 
-
         actual fun getSupported32BitAbis(): List<String> {
             return supported32BitAbisSync
         }
-
 
         val supported64BitAbisSync: List<String>
             get() {
@@ -1015,7 +908,6 @@ actual class DeviceInfo {
                 }
                 return array
             }
-
 
         actual fun getSupported64BitAbis(): List<String> {
             return supported64BitAbisSync
@@ -1038,8 +930,6 @@ actual class DeviceInfo {
             } else if (status == BatteryManager.BATTERY_STATUS_FULL) {
                 batteryState = BatterState.FULL
             }
-            val powerManager =
-                context.getSystemService(Context.POWER_SERVICE) as PowerManager
             val powerSaveMode = powerManager.isPowerSaveMode
             return PowerState(
                 batteryPercentage,

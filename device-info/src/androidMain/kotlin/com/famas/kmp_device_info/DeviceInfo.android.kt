@@ -221,12 +221,10 @@ actual class DeviceInfo {
             return ipAddressSync
         }
 
-
-        @get:Suppress("deprecation")
         private val isCameraPresentSync: Boolean?
             get() = try {
                 try {
-                    cameraManager.cameraIdList.size > 0
+                    cameraManager.cameraIdList.isNotEmpty()
                 } catch (e: Exception) {
                     false
                 }
@@ -235,11 +233,10 @@ actual class DeviceInfo {
                 null
             }
 
-
         actual fun isCameraPresent() = isCameraPresentSync
 
-        @get:SuppressLint("HardwareIds")
-        val macAddressSync: String
+        private val macAddressSync: String
+            @SuppressLint("HardwareIds")
             get() {
                 val wifiInfo = wifiInfo
                 var macAddress = ""
@@ -352,18 +349,11 @@ actual class DeviceInfo {
         actual fun getTotalDiskCapacityOld() = totalDiskCapacityOldSync
 
 
-        val freeDiskStorageOldSync: Double
+        private val freeDiskStorageOldSync: Double
             get() = try {
                 val external = StatFs(Environment.getExternalStorageDirectory().absolutePath)
-                val availableBlocks: Long
-                val blockSize: Long
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    availableBlocks = external.availableBlocks.toLong()
-                    blockSize = external.blockSize.toLong()
-                } else {
-                    availableBlocks = external.availableBlocksLong
-                    blockSize = external.blockSizeLong
-                }
+                val availableBlocks: Long = external.availableBlocksLong
+                val blockSize: Long = external.blockSizeLong
                 BigInteger.valueOf(availableBlocks).multiply(BigInteger.valueOf(blockSize))
                     .toDouble()
             } catch (e: Exception) {
@@ -392,7 +382,7 @@ actual class DeviceInfo {
             return isBatteryChargingSync
         }
 
-        val usedMemorySync: Double
+        private val usedMemorySync: Double
             get() {
                 return try {
                     val pid = Process.myPid()
@@ -498,7 +488,7 @@ actual class DeviceInfo {
             return hasSystemFeatureSync(feature)
         }
 
-        val systemAvailableFeaturesSync: List<String>
+        private val systemAvailableFeaturesSync: List<String>
             get() {
                 val featureList: Array<FeatureInfo> =
                     context.packageManager.systemAvailableFeatures
@@ -652,16 +642,11 @@ actual class DeviceInfo {
             get() {
                 try {
                     return if (Build.VERSION.SDK_INT >= 26) {
-                        // There are a lot of conditions to access to getSerial api
-                        // For details, see https://developer.android.com/reference/android/os/Build#getSerial()
-                        // Rather than check each one, just try and rely on the catch below, for discussion on this approach, refer to
-                        // https://github.com/react-native-device-info/react-native-device-info/issues/1320
                         Build.getSerial()
                     } else {
                         Build.SERIAL
                     }
                 } catch (e: Exception) {
-                    // This is almost always a PermissionException. We will log it but return unknown
                     System.err.println("getSerialNumber failed, it probably should not be used: " + e.message)
                 }
                 return "unknown"
@@ -685,7 +670,7 @@ actual class DeviceInfo {
             return buildIdSync
         }
 
-        val apiLevelSync: Int
+        private val apiLevelSync: Int
             get() = Build.VERSION.SDK_INT
 
         actual fun getApiLevel(): Int {
@@ -854,12 +839,9 @@ actual class DeviceInfo {
         @get:SuppressLint("HardwareIds", "MissingPermission")
         val phoneNumberSync: String
             get() {
-                if (context != null &&
-                    (context.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) === PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context.checkCallingOrSelfPermission(
+                if (context.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context.checkCallingOrSelfPermission(
                         Manifest.permission.READ_SMS
-                    ) === PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && context.checkCallingOrSelfPermission(
-                        Manifest.permission.READ_PHONE_NUMBERS
-                    ) === PackageManager.PERMISSION_GRANTED)
+                    ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     try {
                         return telephonyManager.line1Number
@@ -900,7 +882,7 @@ actual class DeviceInfo {
             return supported32BitAbisSync
         }
 
-        val supported64BitAbisSync: List<String>
+        private val supported64BitAbisSync: List<String>
             get() {
                 val array = listOf<String>()
                 for (abi in Build.SUPPORTED_64_BIT_ABIS) {

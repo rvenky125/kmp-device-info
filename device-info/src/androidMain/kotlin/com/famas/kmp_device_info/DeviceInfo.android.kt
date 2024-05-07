@@ -29,7 +29,6 @@ import android.provider.Settings
 import android.provider.Settings.Secure
 import android.telephony.TelephonyManager
 import android.webkit.WebSettings
-import com.famas.kmp_device_info.resolver.DeviceIdResolver
 import com.famas.kmp_device_info.resolver.DeviceTypeResolver
 import java.math.BigInteger
 import java.net.InetAddress
@@ -41,7 +40,6 @@ import java.util.Collections
 actual class DeviceInfo {
     actual companion object {
         private lateinit var deviceTypeResolver: DeviceTypeResolver
-        private lateinit var deviceIdResolver: DeviceIdResolver
         private lateinit var context: Context
         private lateinit var wifiManager: WifiManager
         private lateinit var activityManager: ActivityManager
@@ -64,7 +62,6 @@ actual class DeviceInfo {
             this.context = context
 
             deviceTypeResolver = DeviceTypeResolver(context)
-            deviceIdResolver = DeviceIdResolver(context)
             wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
             activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
@@ -727,13 +724,6 @@ actual class DeviceInfo {
 
         actual fun getTotalMemory(): Double {
             return totalMemorySync
-        }
-
-        private val instanceIdSync: String?
-            get() = deviceIdResolver.instanceIdSync
-
-        actual fun getInstanceId(): String? {
-            return instanceIdSync
         }
 
         private val baseOsSync: String

@@ -200,10 +200,6 @@ actual class DeviceInfo {
 
         }
 
-        actual fun getInstanceId(): String? {
-            throw NotAvailableToPlatformException
-        }
-
         actual fun getBaseOs(): String {
             throw NotAvailableToPlatformException
         }

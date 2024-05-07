@@ -1,8 +1,8 @@
 name: Build and Publish to MC
+
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -45,9 +45,6 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-
-      # - name: Build
-        # run: ./gradlew build
 
       - name: Publish Library on Maven Central 🚀
         run: ./gradlew clean publish --no-daemon --no-parallel --no-configuration-cache --stacktrace

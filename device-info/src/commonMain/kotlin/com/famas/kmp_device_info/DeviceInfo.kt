@@ -38,10 +38,6 @@ expect class DeviceInfo {
 
         fun isAirplaneMode(): Boolean
 
-        fun hasGms(): Boolean
-
-        fun hasHms(): Boolean
-
         fun hasSystemFeature(feature: String?): Boolean
 
         fun getSystemAvailableFeatures(): List<String>
@@ -51,8 +47,6 @@ expect class DeviceInfo {
         fun isHeadphonesConnected(): Boolean
 
         fun getAvailableLocationProviders(): Map<String, Boolean>
-
-        fun getInstallReferrer(): String?
 
         fun getInstallerPackageName(): String
 

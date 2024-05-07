@@ -62,14 +62,6 @@ actual class DeviceInfo {
             throw NotAvailableToPlatformException
         }
 
-        actual fun hasGms(): Boolean {
-            throw NotAvailableToPlatformException
-        }
-
-        actual fun hasHms(): Boolean {
-            throw NotAvailableToPlatformException
-        }
-
         actual fun hasSystemFeature(feature: String?): Boolean {
             throw NotAvailableToPlatformException
         }
@@ -90,10 +82,6 @@ actual class DeviceInfo {
         actual fun getAvailableLocationProviders(): Map<String, Boolean> {
             return DeviceInfoFactory.getAvailableLocationProviders() as Map<String, Boolean>
 
-        }
-
-        actual fun getInstallReferrer(): String? {
-            throw NotAvailableToPlatformException
         }
 
         actual fun getInstallerPackageName(): String {

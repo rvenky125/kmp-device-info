@@ -1,6 +1,10 @@
 # kmp-device-info
 
-![Frame 2](https://github.com/rvenky125/kmp-device-info/assets/58197145/35bce092-c126-4236-9edf-16b8a1ff246d)
+![Frame 3](https://github.com/rvenky125/kmp-device-info/assets/58197145/8aaf50a4-6b7b-4226-a40d-4ce366dca6b1)
+
+[![Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-darkgreen.svg)](https://opensource.org/licenses/Apache-2.0)
+[![BuildPassing](https://shields.io/badge/build-passing-blue)](https://github.com/rvenky125/kmp-device-info/actions)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.rvenky125/kmp-device-info)](https://search.maven.org/search?q=g:%22io.github.rvenky125%22%20AND%20a:%kmp-device-info%22)
 
 Device Information for KMP applications. Thanks to [react-native-device-info](https://github.com/react-native-device-info/react-native-device-info) for providing inspiration and resources that were utilized in this project.
 

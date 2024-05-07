@@ -1,13 +1,22 @@
 # kmp-device-info
 
-Device Information for KMP applications
+Device Information for KMP applications. Thanks to [react-native-device-info](https://github.com/react-native-device-info/react-native-device-info) for providing inspiration and resources that were utilized in this project.
+
+getting unique id:
+```kotlin
+//use like this in common main
+import com.famas.kmp_device_info.DeviceInfo
+
+val uniqueId = DeviceInfo.getUniqueId()
+
+```
+
 
 ## TOC
 
 - [Installation](#installation)
 - [Usage](#usage)
 - [API](#api)
-- [Hooks & Events](#hooks--events)
 - [Troubleshooting](#troubleshooting)
 
 ## Installation
@@ -58,9 +67,9 @@ If you are experiencing issues with hasGms() on your release apks, please add th
 ```
 
 ## Usage
-
+In Common main:
 ```kotlin
-import com.famas.kmp_device_info.DeviceInfo;
+import com.famas.kmp_device_info.DeviceInfo
 
 DeviceInfo.getUniqueId()
 ```
@@ -103,7 +112,6 @@ Note that many APIs are platform-specific. If there is no implementation for a p
 | [getincremental](#getincremental) | ❌ | ✅ |  |  |  |
 | [getinstallerpackagename](#getinstallerpackagename) | ✅ | ✅ |  |  |  |
 | [getinstallreferrer](#getinstallreferrer) | ❌ | ✅ |  |  |  |
-| [getinstanceid](#getinstanceid) | ❌ | ✅ |  |  |  |
 | [getlastupdatetime](#getlastupdatetime) | ❌ | ✅ |  |  |  |
 | [getmacaddress](#getmacaddress) | ✅ | ✅ |  |  |  |
 | [getmanufacturer](#getmanufacturer) | ✅ | ✅ |  |  |  |
@@ -127,7 +135,6 @@ Note that many APIs are platform-specific. If there is no implementation for a p
 | [getuniqueid](#getuniqueid) | ✅ | ✅ |  |  |  |
 | [getusedmemory](#getusedmemory) | ✅ | ✅ |  |  |  |
 | [getuseragent](#getuseragent) | ✅ | ✅ |  |  |  |
-| [getuseragent](#getuseragent) | ❌ | ✅ |  |  |  |
 | [getversion](#getversion) | ✅ | ✅ |  |  |  |
 | [getBrightness](#getBrightness) | ✅ | ❌ |  |  |  |
 | [hasGms](#hasGms) | ❌ | ✅ |  |  |  |
@@ -145,8 +152,6 @@ Note that many APIs are platform-specific. If there is no implementation for a p
 | [isHeadphonesConnected](#isHeadphonesConnected) | ✅ | ✅ |  |  |  |
 | [ispinorfingerprintset](#ispinorfingerprintset) | ✅ | ✅ |  |  |  |
 | [istablet](#istablet) | ✅ | ✅ |  |  |  |
-| [istablet](#istablet) | ❌ | ✅ |  |  |  |
-| [isdisplayzoomed](#isdisplayzoomed) | ✅ | ❌ |  |  |  |
 | [istabletmode](#istabletmode) | ❌ | ❌ |  |  |  |
 | [supported32BitAbis](#supported32BitAbis) | ❌ | ✅ |  |  |  |
 | [supported64BitAbis](#supported64BitAbis) | ❌ | ✅ |  |  |  |
@@ -369,28 +374,6 @@ The internal value used by the underlying source control to represent this build
 ### getInstallReferrer()
 
 Gets the referrer string upon application installation.
-
----
-
-### getInstanceId()
-
-Gets the application instance ID.
-
-This attempts to get an instance ID from these sources, in this order:
-
-- a value under key `instanceId` in SharedPreferences file `kmp-device-info`
-- Firebase IID (if `firebaseBomVersion` or `firebaseIidVersion` is defined in gradle ext - **deprecated**)
-- GMS IID (if `googlePlayServicesIidVersion` or `googlePlayServicesVersion` is defined in gradle ext - **deprecated**)
-- a random UUID generated from java.util.UUID.randomUUID() and stored in SharedPreferences
-
-If you are using the deprecated sources, the instance ID generated is stored in shared preferences so it will be stable during this major version of kmp-device-info.
-
-In a future version of kmp-device-info, the Firebase IID and GMS IID implementations will be removed, and all future values will be the value (if any) stored in SharedPreferences, or a new random UUID that will then be stored and used for that app installation in the future.
-
-### Notes
-
-> See https://developers.google.com/instance-id/
-> 
 
 ---
 
@@ -758,8 +741,7 @@ Tells if the device is connected to wired headset or bluetooth headphones
 
 Returns an object of **platform-specfic** location providers/servcies, with `boolean` value whether or not they are currently available.
 
-> NOTE: This function requires access to the Location permission on Android
-> 
+> NOTE: This function requires access to the Location permission on Android 
 
 ---
 
@@ -769,36 +751,8 @@ Gets the current brightness level of the device’s main screen. Currently iOS o
 
 ---
 
-## Hooks & Events
-
-Supported in Windows, iOS & Android (web support for battery/charging-related APIs).
-
-=======
-
-## Native interoperatibily
-
-If you need to check for device type from the native side, you can use the following:
-
 
 ## Troubleshooting
-
-When installing or using `kmp-device-info`, you may encounter the following problems:
-
-- [android] - Unable to merge dex / Multiple dex files / Problems with `com.google.android.gms`
-    
-    `kmp-device-info` uses `com.google.android.gms:play-services-gcm` to provide [getInstanceI()]([#]g(#()]([#])etinstanceid).
-    This can lead to conflicts when building the Android application.
-    
-    If you’re using a different version of `com.google.android.gms:play-services-gcm` in your app, you can define the
-    `googlePlayServicesVersion` gradle variable in your `build.gradle` file to tell `kmp-device-info` what version
-    it should require. See the example project included here for a sample.
-    
-    If you’re using a different library that conflicts with `com.google.android.gms:play-services-gcm`, and you are certain you know what you are doing such that you will avoid version conflicts, you can simply
-    ignore this dependency in your gradle file:
-    
-    ```groovy
-     compile(project(':kmp-device-info')) {    exclude group: 'com.google.android.gms'}
-    ```
     
 - [ios] - [NetworkInfo] Descriptors query returned error: Error Domain=NSCocoaErrorDomain Code=4099
 “The connection to service named com.apple.commcenter.coretelephony.xpc was invalidated.”
@@ -816,4 +770,4 @@ When installing or using `kmp-device-info`, you may encounter the following prob
 
 
 ## Contributing
-Please see the [`contributing guide`](/CONTRIBUTING.md).
+There aren't any particular guidelines for sharing your expertise and strengthening the open-source community. Just remember to raise an issue or initiate a discussion beforehand, so there are no surprises when you submit a pull request.

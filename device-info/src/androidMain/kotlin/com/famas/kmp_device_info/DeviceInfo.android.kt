@@ -39,7 +39,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Collections
 
-@SuppressLint("StaticFieldLeak")
 actual class DeviceInfo {
     actual companion object {
         private lateinit var deviceTypeResolver: DeviceTypeResolver
@@ -56,15 +55,17 @@ actual class DeviceInfo {
         private lateinit var powerManager: PowerManager
         private lateinit var packageManager: PackageManager
         private lateinit var contentResolver: ContentResolver
-        private var receiver: BroadcastReceiver? = null
-        private var headphoneConnectionReceiver: BroadcastReceiver? = null
+        private lateinit var receiver: BroadcastReceiver
+        private lateinit var headphoneConnectionReceiver: BroadcastReceiver
         private var mLastBatteryLevel = -1.0
         private var mLastBatteryState = BatterState.UNKNOWN
         private var mLastPowerSaveState = false
-        private var resources: Resources? = null
+        private lateinit var resources: Resources
+        private lateinit var sharedPref: SharedPreferences
 
         fun initialize(context: Context) {
             this.context = context
+
             deviceTypeResolver = DeviceTypeResolver(context)
             deviceIdResolver = DeviceIdResolver(context)
             installReferrerClient = RNInstallReferrerClient(context)
@@ -79,6 +80,7 @@ actual class DeviceInfo {
             packageManager = context.packageManager
             contentResolver = context.contentResolver
             resources = context.resources
+            sharedPref = getSharePreferences(context)
 
             val filter = IntentFilter()
             filter.addAction(Intent.ACTION_BATTERY_CHANGED)
@@ -166,6 +168,7 @@ actual class DeviceInfo {
         }
 
         val isEmulatorSync: Boolean
+            @SuppressLint("HardwareIds")
             get() = (Build.FINGERPRINT.startsWith("generic")
                     || Build.FINGERPRINT.startsWith("unknown")
                     || Build.MODEL.contains("google_sdk")
@@ -191,7 +194,7 @@ actual class DeviceInfo {
                 .contains("nox") || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
 
         private val fontScaleSync: Float
-            get() = resources?.configuration?.fontScale ?: 1f
+            get() = resources.configuration?.fontScale ?: 1f
 
         actual fun getFontScale(): Float {
             return fontScaleSync
@@ -425,7 +428,7 @@ actual class DeviceInfo {
         private val isAirplaneModeSync: Boolean
             get() {
                 return Settings.Global.getInt(
-                    context.contentResolver,
+                    contentResolver,
                     Settings.Global.AIRPLANE_MODE_ON,
                     0
                 ) != 0
@@ -481,7 +484,7 @@ actual class DeviceInfo {
         private fun hasSystemFeatureSync(feature: String?): Boolean {
             return if (feature == null || feature == "") {
                 false
-            } else context.packageManager.hasSystemFeature(feature)
+            } else packageManager.hasSystemFeature(feature)
         }
 
         actual fun hasSystemFeature(feature: String?): Boolean {
@@ -491,7 +494,7 @@ actual class DeviceInfo {
         private val systemAvailableFeaturesSync: List<String>
             get() {
                 val featureList: Array<FeatureInfo> =
-                    context.packageManager.systemAvailableFeatures
+                    packageManager.systemAvailableFeatures
                 val promiseArray = listOf<String>()
                 for (f in featureList) {
                     if (f.name != null) {
@@ -516,7 +519,7 @@ actual class DeviceInfo {
                     }
                 } else {
                     val locationMode = Secure.getInt(
-                        context.contentResolver,
+                        contentResolver,
                         Secure.LOCATION_MODE,
                         Secure.LOCATION_MODE_OFF
                     )
@@ -560,7 +563,6 @@ actual class DeviceInfo {
 
         private val installReferrerSync: String?
             get() {
-                val sharedPref = getSharePreferences(context)
                 return sharedPref.getString("installReferrer", Build.UNKNOWN)
             }
 
@@ -611,7 +613,7 @@ actual class DeviceInfo {
                 try {
                     if (Build.VERSION.SDK_INT <= 31) {
                         val bluetoothName = Secure.getString(
-                            context.getContentResolver(),
+                            contentResolver,
                             "bluetooth_name"
                         )
                         if (bluetoothName != null) {
@@ -620,7 +622,7 @@ actual class DeviceInfo {
                     }
                     if (Build.VERSION.SDK_INT >= 25) {
                         val deviceName = Settings.Global.getString(
-                            context.getContentResolver(),
+                            contentResolver,
                             Settings.Global.DEVICE_NAME
                         )
                         if (deviceName != null) {
@@ -757,7 +759,7 @@ actual class DeviceInfo {
         @get:SuppressLint("HardwareIds")
         val uniqueIdSync: String
             get() = Secure.getString(
-                context.contentResolver,
+                contentResolver,
                 Secure.ANDROID_ID
             )
 

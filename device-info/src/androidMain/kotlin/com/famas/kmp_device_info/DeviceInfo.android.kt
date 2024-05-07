@@ -9,7 +9,6 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.content.pm.FeatureInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -44,7 +43,6 @@ actual class DeviceInfo {
         private lateinit var deviceTypeResolver: DeviceTypeResolver
         private lateinit var deviceIdResolver: DeviceIdResolver
         private lateinit var context: Context
-        private lateinit var installReferrerClient: RNInstallReferrerClient
         private lateinit var wifiManager: WifiManager
         private lateinit var activityManager: ActivityManager
         private lateinit var keyguardManager: KeyguardManager
@@ -61,14 +59,12 @@ actual class DeviceInfo {
         private var mLastBatteryState = BatterState.UNKNOWN
         private var mLastPowerSaveState = false
         private lateinit var resources: Resources
-        private lateinit var sharedPref: SharedPreferences
 
         fun initialize(context: Context) {
             this.context = context
 
             deviceTypeResolver = DeviceTypeResolver(context)
             deviceIdResolver = DeviceIdResolver(context)
-            installReferrerClient = RNInstallReferrerClient(context)
             wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
             activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
@@ -80,7 +76,6 @@ actual class DeviceInfo {
             packageManager = context.packageManager
             contentResolver = context.contentResolver
             resources = context.resources
-            sharedPref = getSharePreferences(context)
 
             val filter = IntentFilter()
             filter.addAction(Intent.ACTION_BATTERY_CHANGED)
@@ -118,11 +113,6 @@ actual class DeviceInfo {
                 }
             }
             context.registerReceiver(headphoneConnectionReceiver, filter)
-        }
-
-        fun onCatalystInstanceDestroy(context: Context) {
-            context.unregisterReceiver(receiver)
-            context.unregisterReceiver(headphoneConnectionReceiver)
         }
 
         private val wifiInfo: WifiInfo?
@@ -436,51 +426,6 @@ actual class DeviceInfo {
 
         actual fun isAirplaneMode() = isAirplaneModeSync
 
-        private fun hasGmsSync(): Boolean {
-            return try {
-                val googleApiAvailability =
-                    Class.forName("com.google.android.gms.common.GoogleApiAvailability")
-                val getInstanceMethod = googleApiAvailability.getMethod("getInstance")
-                val gmsObject = getInstanceMethod.invoke(null)
-                val isGooglePlayServicesAvailableMethod =
-                    gmsObject.javaClass.getMethod(
-                        "isGooglePlayServicesAvailable",
-                        Context::class.java
-                    )
-                val isGMS = isGooglePlayServicesAvailableMethod.invoke(
-                    gmsObject,
-                    context
-                ) as Int
-                isGMS == 0 // ConnectionResult.SUCCESS
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        actual fun hasGms() = hasGmsSync()
-
-        private fun hasHmsSync(): Boolean {
-            return try {
-                val huaweiApiAvailability =
-                    Class.forName("com.huawei.hms.api.HuaweiApiAvailability")
-                val getInstanceMethod = huaweiApiAvailability.getMethod("getInstance")
-                val hmsObject = getInstanceMethod.invoke(null)
-                val isHuaweiMobileServicesAvailableMethod = hmsObject.javaClass.getMethod(
-                    "isHuaweiMobileServicesAvailable",
-                    Context::class.java
-                )
-                val isHMS = isHuaweiMobileServicesAvailableMethod.invoke(
-                    hmsObject,
-                    context
-                ) as Int
-                isHMS == 0 // ConnectionResult.SUCCESS
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        actual fun hasHms() = hasHmsSync()
-
         private fun hasSystemFeatureSync(feature: String?): Boolean {
             return if (feature == null || feature == "") {
                 false
@@ -559,15 +504,6 @@ actual class DeviceInfo {
 
         actual fun getAvailableLocationProviders(): Map<String, Boolean> {
             return availableLocationProvidersSync
-        }
-
-        private val installReferrerSync: String?
-            get() {
-                return sharedPref.getString("installReferrer", Build.UNKNOWN)
-            }
-
-        actual fun getInstallReferrer(): String? {
-            return installReferrerSync
         }
 
         private val packageInfo: PackageInfo
@@ -940,10 +876,6 @@ actual class DeviceInfo {
             return supportedMediaTypeListSync
         }
 
-        @JvmStatic
-        fun getSharePreferences(context: Context): SharedPreferences {
-            return context.getSharedPreferences("kmp-device-info", Context.MODE_PRIVATE)
-        }
 
         actual fun isDisplayZoomed(): Boolean {
             throw NotAvailableToPlatformException

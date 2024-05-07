@@ -1,5 +1,7 @@
 # kmp-device-info
 
+![Frame 2](https://github.com/rvenky125/kmp-device-info/assets/58197145/35bce092-c126-4236-9edf-16b8a1ff246d)
+
 Device Information for KMP applications. Thanks to [react-native-device-info](https://github.com/react-native-device-info/react-native-device-info) for providing inspiration and resources that were utilized in this project.
 
 getting unique id:
@@ -38,126 +40,108 @@ val uniqueId = DeviceInfo.getUniqueId()
 </details>
 
 <br />
-Call the initialize function in Application or MainActivity and it should be called before calling other methods from device info.
+Call the initialize function in Application class and it should be called before calling other methods from device info.
 
 ```kotlin
 import com.famas.kmp_device_info.DeviceInfo
 
-override fun onCreate(savedInstanceState: Bundle?) {
-     super.onCreate(savedInstanceState)
-     DeviceInfo.initialize(this)
-     ....
+class MainApplication : Application() {
+  override fun onCreate() { 
+      super.onCreate()
+      DeviceInfo.initialize(this)
+  }
 }
-```
-
-## Proguard
-
-If you want to use Install Referrer tracking, you will need to add this config to your Proguard config
-
-```
--keep class com.android.installreferrer.api.** {
-  *;
-}
-```
-
-If you are experiencing issues with hasGms() on your release apks, please add the following rule to your Proguard config
-
-```
--keep class com.google.android.gms.common.** {*;}
 ```
 
 ## Usage
-In Common main:
+In the common main of shared code:
 ```kotlin
 import com.famas.kmp_device_info.DeviceInfo
 
-DeviceInfo.getUniqueId()
+val isEmulator = DeviceInfo.isEmulator()
 ```
 
 ## API
 
-Note that many APIs are platform-specific. If there is no implementation for a platform, then you’ll get **not implemented for the platform exception**.
+Note that many APIs are platform-specific. If there is no implementation for a platform, then you’ll get [NotAvailableToPlatformException](https://github.com/rvenky125/kmp-device-info/blob/182336070f48e8db4169cc3c4f8a1ce0daf97541/device-info/src/commonMain/kotlin/com/famas/kmp_device_info/Util.kt#L3).
 
-| Method | iOS | Android | Windows (work in progress) | Web (work in progress) | visionOS (work in progress) |
-| --- | --- | --- | --- | --- | --- |
-| [getandroidid](#getandroidid) | ❌ | ✅ |  |  |  |
-| [getapilevel](#getapilevel) | ❌ | ✅ |  |  |  |
-| [getapplicationname](#getapplicationname) | ✅ | ✅ |  |  |  |
+| Method                                                         | iOS | Android | Windows (work in progress) | Web (work in progress) | visionOS (work in progress) |
+|----------------------------------------------------------------| --- | --- | --- | --- | --- |
+| [getandroidid](#getandroidid)                                  | ❌ | ✅ |  |  |  | 
+| getPlatFormType                                               | ✅ | ✅ |  |  |  | 
+| [getapilevel](#getapilevel)                                    | ❌ | ✅ |  |  |  |
+| [getapplicationname](#getapplicationname)                      | ✅ | ✅ |  |  |  |
 | [getAvailableLocationProviders](#getAvailableLocationProviders) | ✅ | ✅ |  |  |  |
-| [getbaseOs](#getbaseOs) | ❌ | ✅ |  |  |  |
-| [getbuildid](#getbuildid) | ✅ | ✅ |  |  |  |
-| [getbatterylevel](#getbatterylevel) | ✅ | ✅ |  |  |  |
-| [getbootloader](#getbootloader) | ❌ | ✅ |  |  |  |
-| [getbrand](#getbrand) | ✅ | ✅ |  |  |  |
-| [getbuildnumber](#getbuildnumber) | ✅ | ✅ |  |  |  |
-| [getbundleid](#getbundleid) | ✅ | ✅ |  |  |  |
-| [iscamerapresent](#iscamerapresent) | ❌ | ✅ |  |  |  |
-| [getcarrier](#getcarrier) | ✅ | ✅ |  |  |  |
-| [getcodename](#getcodename) | ❌ | ✅ |  |  |  |
-| [getdevice](#getdevice) | ❌ | ✅ |  |  |  |
-| [getdeviceid](#getdeviceid) | ✅ | ✅ |  |  |  |
-| [getDeviceType](#getDeviceType) | ✅ | ✅ |  |  |  |
-| [getdisplay](#getdisplay) | ❌ | ✅ |  |  |  |
-| [getdevicename](#getdevicename) | ✅ | ✅ |  |  |  |
-| [getdevicetoken](#getdevicetoken) | ✅ | ❌ |  |  |  |
-| [getfirstinstalltime](#getfirstinstalltime) | ✅ | ✅ |  |  |  |
-| [getfingerprint](#getfingerprint) | ❌ | ✅ |  |  |  |
-| [getfontscale](#getfontscale) | ✅ | ✅ |  |  |  |
-| [getfreediskstorage](#getfreediskstorage) | ✅ | ✅ |  |  |  |
-| [getfreediskstorageold](#getfreediskstorageold) | ✅ | ✅ |  |  |  |
-| [gethardware](#gethardware) | ❌ | ✅ |  |  |  |
-| [gethost](#gethost) | ❌ | ✅ |  |  |  |
-| [getHostNames](#getHostNames) | ❌ | ❌ |  |  |  |
-| [getipaddress](#getipaddress) | ✅ | ✅ |  |  |  |
-| [getincremental](#getincremental) | ❌ | ✅ |  |  |  |
-| [getinstallerpackagename](#getinstallerpackagename) | ✅ | ✅ |  |  |  |
-| [getinstallreferrer](#getinstallreferrer) | ❌ | ✅ |  |  |  |
-| [getlastupdatetime](#getlastupdatetime) | ❌ | ✅ |  |  |  |
-| [getmacaddress](#getmacaddress) | ✅ | ✅ |  |  |  |
-| [getmanufacturer](#getmanufacturer) | ✅ | ✅ |  |  |  |
-| [getmaxmemory](#getmaxmemory) | ❌ | ✅ |  |  |  |
-| [getmodel](#getmodel) | ✅ | ✅ |  |  |  |
-| [getphonenumber](#getphonenumber) | ❌ | ✅ |  |  |  |
-| [getpowerstate](#getpowerstate) | ✅ | ✅ |  |  |  |
-| [getproduct](#getproduct) | ❌ | ✅ |  |  |  |
-| [getPreviewSdkInt](#getPreviewSdkInt) | ❌ | ✅ |  |  |  |
-| [getreadableversion](#getreadableversion) | ✅ | ✅ |  |  |  |
-| [getserialnumber](#getserialnumber) | ❌ | ✅ |  |  |  |
-| [getsecuritypatch](#getsecuritypatch) | ❌ | ✅ |  |  |  |
-| [getSystemAvailableFeatures](#getSystemAvailableFeatures) | ❌ | ✅ |  |  |  |
-| [getsystemname](#getsystemname) | ✅ | ✅ |  |  |  |
-| [getsystemversion](#getsystemversion) | ✅ | ✅ |  |  |  |
-| [gettags](#gettags) | ❌ | ✅ |  |  |  |
-| [gettype](#gettype) | ❌ | ✅ |  |  |  |
-| [gettotaldiskcapacity](#gettotaldiskcapacity) | ✅ | ✅ |  |  |  |
-| [gettotaldiskcapacityold](#gettotaldiskcapacityold) | ✅ | ✅ |  |  |  |
-| [gettotalmemory](#gettotalmemory) | ✅ | ✅ |  |  |  |
-| [getuniqueid](#getuniqueid) | ✅ | ✅ |  |  |  |
-| [getusedmemory](#getusedmemory) | ✅ | ✅ |  |  |  |
-| [getuseragent](#getuseragent) | ✅ | ✅ |  |  |  |
-| [getversion](#getversion) | ✅ | ✅ |  |  |  |
-| [getBrightness](#getBrightness) | ✅ | ❌ |  |  |  |
-| [hasGms](#hasGms) | ❌ | ✅ |  |  |  |
-| [hasHms](#hasHms) | ❌ | ✅ |  |  |  |
-| [hasNotch](#hasNotch) | ✅ | ✅ |  |  |  |
-| [hasDynamicIsland](#hasDynamicIsland) | ✅ | ✅ |  |  |  |
-| [hassystemfeaturefeature](#hassystemfeaturefeature) | ❌ | ✅ |  |  |  |
-| [isairplanemode](#isairplanemode) | ❌ | ✅ |  |  |  |
-| [isbatterycharging](#isbatterycharging) | ✅ | ✅ |  |  |  |
-| [isemulator](#isemulator) | ✅ | ✅ |  |  |  |
-| [iskeyboardconnected](#iskeyboardconnected) | ❌ | ❌ |  |  |  |
-| [isLandscape](#isLandscape) | ✅ | ✅ |  |  |  |
-| [isLocationEnabled](#isLocationEnabled) | ✅ | ✅ |  |  |  |
-| [ismouseconneted](#ismouseconneted) | ❌ | ❌ |  |  |  |
-| [isHeadphonesConnected](#isHeadphonesConnected) | ✅ | ✅ |  |  |  |
-| [ispinorfingerprintset](#ispinorfingerprintset) | ✅ | ✅ |  |  |  |
-| [istablet](#istablet) | ✅ | ✅ |  |  |  |
-| [istabletmode](#istabletmode) | ❌ | ❌ |  |  |  |
-| [supported32BitAbis](#supported32BitAbis) | ❌ | ✅ |  |  |  |
-| [supported64BitAbis](#supported64BitAbis) | ❌ | ✅ |  |  |  |
-| [supportedAbis](#supportedAbis) | ✅ | ✅ |  |  |  |
-| [syncuniqueid](#syncuniqueid) | ✅ | ❌ |  |  |  |
-| [getSupportedMediaTypeList](#getSupportedMediaTypeList) | ❌ | ✅ |  |  |  |
+| [getbaseOs](#getbaseOs)                                        | ❌ | ✅ |  |  |  |
+| [getbuildid](#getbuildid)                                      | ✅ | ✅ |  |  |  |
+| [getbatterylevel](#getbatterylevel)                            | ✅ | ✅ |  |  |  |
+| [getbootloader](#getbootloader)                                | ❌ | ✅ |  |  |  |
+| [getbrand](#getbrand)                                          | ✅ | ✅ |  |  |  |
+| [getbuildnumber](#getbuildnumber)                              | ✅ | ✅ |  |  |  |
+| [getbundleid](#getbundleid)                                    | ✅ | ✅ |  |  |  |
+| [iscamerapresent](#iscamerapresent)                            | ❌ | ✅ |  |  |  |
+| [getcarrier](#getcarrier)                                      | ✅ | ✅ |  |  |  |
+| [getcodename](#getcodename)                                    | ❌ | ✅ |  |  |  |
+| [getdevice](#getdevice)                                        | ❌ | ✅ |  |  |  |
+| [getdeviceid](#getdeviceid)                                    | ✅ | ✅ |  |  |  |
+| [getDeviceType](#getDeviceType)                                | ✅ | ✅ |  |  |  |
+| [getdisplay](#getdisplay)                                      | ❌ | ✅ |  |  |  |
+| [getdevicename](#getdevicename)                                | ✅ | ✅ |  |  |  |
+| [getdevicetoken](#getdevicetoken)                              | ✅ | ❌ |  |  |  |
+| [getfirstinstalltime](#getfirstinstalltime)                    | ✅ | ✅ |  |  |  |
+| [getfingerprint](#getfingerprint)                              | ❌ | ✅ |  |  |  |
+| [getfontscale](#getfontscale)                                  | ✅ | ✅ |  |  |  |
+| [getfreediskstorage](#getfreediskstorage)                      | ✅ | ✅ |  |  |  |
+| [getfreediskstorageold](#getfreediskstorageold)                | ✅ | ✅ |  |  |  |
+| [gethardware](#gethardware)                                    | ❌ | ✅ |  |  |  |
+| [gethost](#gethost)                                            | ❌ | ✅ |  |  |  |
+| [getHostNames](#getHostNames)                                  | ❌ | ❌ |  |  |  |
+| [getipaddress](#getipaddress)                                  | ✅ | ✅ |  |  |  |
+| [getincremental](#getincremental)                              | ❌ | ✅ |  |  |  |
+| [getinstallerpackagename](#getinstallerpackagename)            | ✅ | ✅ |  |  |  |
+| [getlastupdatetime](#getlastupdatetime)                        | ❌ | ✅ |  |  |  |
+| [getmacaddress](#getmacaddress)                                | ✅ | ✅ |  |  |  |
+| [getmanufacturer](#getmanufacturer)                            | ✅ | ✅ |  |  |  |
+| [getmaxmemory](#getmaxmemory)                                  | ❌ | ✅ |  |  |  |
+| [getmodel](#getmodel)                                          | ✅ | ✅ |  |  |  |
+| [getphonenumber](#getphonenumber)                              | ❌ | ✅ |  |  |  |
+| [getpowerstate](#getpowerstate)                                | ✅ | ✅ |  |  |  |
+| [getproduct](#getproduct)                                      | ❌ | ✅ |  |  |  |
+| [getPreviewSdkInt](#getPreviewSdkInt)                          | ❌ | ✅ |  |  |  |
+| [getreadableversion](#getreadableversion)                      | ✅ | ✅ |  |  |  |
+| [getserialnumber](#getserialnumber)                            | ❌ | ✅ |  |  |  |
+| [getsecuritypatch](#getsecuritypatch)                          | ❌ | ✅ |  |  |  |
+| [getSystemAvailableFeatures](#getSystemAvailableFeatures)      | ❌ | ✅ |  |  |  |
+| [getsystemname](#getsystemname)                                | ✅ | ✅ |  |  |  |
+| [getsystemversion](#getsystemversion)                          | ✅ | ✅ |  |  |  |
+| [gettags](#gettags)                                            | ❌ | ✅ |  |  |  |
+| [gettype](#gettype)                                            | ❌ | ✅ |  |  |  |
+| [gettotaldiskcapacity](#gettotaldiskcapacity)                  | ✅ | ✅ |  |  |  |
+| [gettotaldiskcapacityold](#gettotaldiskcapacityold)            | ✅ | ✅ |  |  |  |
+| [gettotalmemory](#gettotalmemory)                              | ✅ | ✅ |  |  |  |
+| [getuniqueid](#getuniqueid)                                    | ✅ | ✅ |  |  |  |
+| [getusedmemory](#getusedmemory)                                | ✅ | ✅ |  |  |  |
+| [getuseragent](#getuseragent)                                  | ✅ | ✅ |  |  |  |
+| [getversion](#getversion)                                      | ✅ | ✅ |  |  |  |
+| [getBrightness](#getBrightness)                                | ✅ | ❌ |  |  |  |
+| [hasNotch](#hasNotch)                                          | ✅ | ✅ |  |  |  |
+| [hasDynamicIsland](#hasDynamicIsland)                          | ✅ | ✅ |  |  |  |
+| [hassystemfeaturefeature](#hassystemfeaturefeature)            | ❌ | ✅ |  |  |  |
+| [isairplanemode](#isairplanemode)                              | ❌ | ✅ |  |  |  |
+| [isbatterycharging](#isbatterycharging)                        | ✅ | ✅ |  |  |  |
+| [isemulator](#isemulator)                                      | ✅ | ✅ |  |  |  |
+| [iskeyboardconnected](#iskeyboardconnected)                    | ❌ | ❌ |  |  |  |
+| [isLandscape](#isLandscape)                                    | ✅ | ✅ |  |  |  |
+| [isLocationEnabled](#isLocationEnabled)                        | ✅ | ✅ |  |  |  |
+| [ismouseconneted](#ismouseconneted)                            | ❌ | ❌ |  |  |  |
+| [isHeadphonesConnected](#isHeadphonesConnected)                | ✅ | ✅ |  |  |  |
+| [ispinorfingerprintset](#ispinorfingerprintset)                | ✅ | ✅ |  |  |  |
+| [istablet](#istablet)                                          | ✅ | ✅ |  |  |  |
+| [istabletmode](#istabletmode)                                  | ❌ | ❌ |  |  |  |
+| [supported32BitAbis](#supported32BitAbis)                      | ❌ | ✅ |  |  |  |
+| [supported64BitAbis](#supported64BitAbis)                      | ❌ | ✅ |  |  |  |
+| [supportedAbis](#supportedAbis)                                | ✅ | ✅ |  |  |  |
+| [getSupportedMediaTypeList](#getSupportedMediaTypeList)        | ❌ | ✅ |  |  |  |
 
 ### getApiLevel()
 
@@ -328,7 +312,6 @@ Old implementation of method that gets available storage size, in bytes.
 > that is shared across all applications (does not enforce permissions). Traditionally this is
 > an SD card, but it may also be implemented as built-in storage in a device that is distinct
 > from the protected internal storage and can be mounted as a filesystem on a computer.
-> 
 
 ---
 
@@ -368,12 +351,6 @@ The internal value used by the underlying source control to represent this build
 ### getInstallerPackageName()
 
 The internal value used by the underlying source control to represent this build.
-
----
-
-### getInstallReferrer()
-
-Gets the referrer string upon application installation.
 
 ---
 
@@ -542,16 +519,6 @@ Beware: The IDFV is calculated using your bundle identifier and thus will be dif
 > 
 
 ---
-
-### syncUniqueId()
-
-This method is intended for iOS.
-
-This synchronizes uniqueId with `[IDFV](https://developer.apple.com/documentation/uikit/uidevice/1620059-identifierforvendor)` or sets new a random string.
-
-On iOS it uses the `DeviceUID` uid identifier.
-On other platforms it just call `getUniqueId()` in this module.
-
 ### Notes
 
 > If user moved or restored data from one iOS device to second iOS device then he will have two different devices with same uniqueId in Keychain/NSUserDefaults. User can call syncUniqueId() on new iOS device. That will update his uniqueId from IDFV or a random string.
@@ -657,18 +624,6 @@ Tells if the device has a mouse connected.
 
 ---
 
-### hasGms()
-
-Tells if the device supports Google Mobile Services.
-
----
-
-### hasHms()
-
-Tells if the device supports Huawei Mobile Services.
-
----
-
 ### hasNotch()
 
 Tells if the device has a notch.
@@ -683,15 +638,8 @@ Tells if the device has a dynamic island.
 
 ### getDeviceType()
 
-Returns the device’s type as a string, which will be one of:
+Returns the device’s type class, which will be one of:
 
-- `Handset`
-- `Tablet`
-- `Tv`
-- `Desktop`
-- `GamingConsole`
-- `Headset`
-- `unknown`
 
 ---
 

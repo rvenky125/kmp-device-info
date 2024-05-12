@@ -31,7 +31,7 @@ val uniqueId = DeviceInfo.getUniqueId()
   <summary>build.gradle.kts:</summary>
 
   ```kotlin
-  api("io.github.rvenky125:kmp-device-info:0.0.16-alpha")
+  api("io.github.rvenky125:kmp-device-info:0.0.17-alpha")
   ```
 </details>
 
@@ -39,7 +39,7 @@ val uniqueId = DeviceInfo.getUniqueId()
   <summary>build.gradle:</summary>
 
   ```kotlin
-  api "io.github.rvenky125:kmp-device-info:0.0.16-alpha"
+  api "io.github.rvenky125:kmp-device-info:0.0.17-alpha"
   ```
 </details>
 

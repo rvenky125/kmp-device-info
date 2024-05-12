@@ -505,7 +505,7 @@ actual class DeviceInfo {
 
         private val packageInfo: PackageInfo
             get() = packageManager
-                .getPackageInfo(packageInfo.packageName, 0)
+                .getPackageInfo(context.packageName, 0)
 
         private val installerPackageNameSync: String
             get() {

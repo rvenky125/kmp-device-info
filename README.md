@@ -6,7 +6,7 @@
 [![BuildPassing](https://shields.io/badge/build-passing-blue)](https://github.com/rvenky125/kmp-device-info/actions)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rvenky125/kmp-device-info)](https://search.maven.org/search?q=g:%22io.github.rvenky125%22%20AND%20a:%kmp-device-info%22)
 
-Device Information for KMP applications. Thanks to [react-native-device-info](https://github.com/react-native-device-info/react-native-device-info) for providing inspiration and resources that were utilized in this project.
+Device Information for KMP applications. Thanks to [react-native-device-info](https://github.com/react-native-device-info/react-native-device-info) for providing inspiration.
 
 getting unique id:
 ```kotlin

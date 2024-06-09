@@ -17,6 +17,9 @@ import android.hardware.camera2.CameraManager
 import android.location.LocationManager
 import android.media.AudioManager
 import android.media.MediaCodecList
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
@@ -30,15 +33,20 @@ import android.provider.Settings.Secure
 import android.telephony.TelephonyManager
 import android.webkit.WebSettings
 import com.famas.kmp_device_info.resolver.DeviceTypeResolver
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Collections
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 actual class DeviceInfo {
     actual companion object {
+        @SuppressLint("StaticFieldLeak")
         private lateinit var deviceTypeResolver: DeviceTypeResolver
         private lateinit var context: Context
         private lateinit var wifiManager: WifiManager
@@ -62,11 +70,13 @@ actual class DeviceInfo {
             this.context = context
 
             deviceTypeResolver = DeviceTypeResolver(context)
-            wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            wifiManager =
+                context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
             activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
             cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            telephonyManager =
+                context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
             audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
             locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -112,8 +122,28 @@ actual class DeviceInfo {
             context.registerReceiver(headphoneConnectionReceiver, filter)
         }
 
-        private val wifiInfo: WifiInfo?
-            get() = wifiManager.connectionInfo
+        private suspend fun getWifiInfo(): WifiInfo? {
+            return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                wifiManager.connectionInfo
+            } else {
+                return suspendCoroutine {
+                    object : ConnectivityManager.NetworkCallback() {
+                        override fun onCapabilitiesChanged(
+                            network: Network,
+                            networkCapabilities: NetworkCapabilities
+                        ) {
+                            val transportInfo = networkCapabilities.transportInfo
+                            if (transportInfo is WifiInfo) {
+                                val wifiInfo: WifiInfo = transportInfo
+                                it.resume(wifiInfo)
+                            } else {
+                                it.resume(null)
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         actual fun isLowRamDevice(): Boolean {
             return activityManager.isLowRamDevice
@@ -127,7 +157,12 @@ actual class DeviceInfo {
                 appVersion = packageInfo.versionName
                 buildNumber = packageInfo.versionCode.toString()
                 appName = packageManager
-                    .getApplicationLabel(packageManager.getApplicationInfo(packageInfo.packageName, 0)).toString()
+                    .getApplicationLabel(
+                        packageManager.getApplicationInfo(
+                            packageInfo.packageName,
+                            0
+                        )
+                    ).toString()
             } catch (e: Exception) {
                 appVersion = "unknown"
                 buildNumber = "unknown"
@@ -154,7 +189,7 @@ actual class DeviceInfo {
             return isEmulatorSync
         }
 
-        val isEmulatorSync: Boolean
+        private val isEmulatorSync: Boolean
             @SuppressLint("HardwareIds")
             get() = (Build.FINGERPRINT.startsWith("generic")
                     || Build.FINGERPRINT.startsWith("unknown")
@@ -194,21 +229,22 @@ actual class DeviceInfo {
             return isPinOrFingerprintSetSync
         }
 
-        val ipAddressSync: String?
-            get() = try {
-                InetAddress.getByAddress(
-                    ByteBuffer
-                        .allocate(4)
-                        .order(ByteOrder.LITTLE_ENDIAN)
-                        .putInt(wifiInfo!!.ipAddress)
-                        .array()
-                ).hostAddress
+        actual suspend fun getIpAddress(): String? {
+            return try {
+                withContext(Dispatchers.IO) {
+                    InetAddress.getByAddress(
+                        getWifiInfo()?.ipAddress?.let {
+                            ByteBuffer
+                                .allocate(4)
+                                .order(ByteOrder.LITTLE_ENDIAN)
+                                .putInt(it)
+                                .array()
+                        }
+                    ).hostAddress
+                }
             } catch (e: Exception) {
                 null
             }
-
-        actual fun getIpAddress(): String? {
-            return ipAddressSync
         }
 
         private val isCameraPresentSync: Boolean?
@@ -225,45 +261,42 @@ actual class DeviceInfo {
 
         actual fun isCameraPresent() = isCameraPresentSync
 
-        private val macAddressSync: String
-            @SuppressLint("HardwareIds")
-            get() {
-                val wifiInfo = wifiInfo
-                var macAddress = ""
-                if (wifiInfo != null) {
-                    macAddress = wifiInfo.macAddress
-                }
-                val permission = "android.permission.INTERNET"
-                val res: Int = context.checkCallingOrSelfPermission(permission)
-                if (res == PackageManager.PERMISSION_GRANTED) {
-                    try {
-                        val all: List<NetworkInterface> =
-                            Collections.list(NetworkInterface.getNetworkInterfaces())
-                        for (nif in all) {
-                            if (!nif.name.equals("wlan0", ignoreCase = true)) continue
-                            val macBytes = nif.hardwareAddress
-                            macAddress = if (macBytes == null) {
-                                ""
-                            } else {
-                                val res1 = StringBuilder()
-                                for (b in macBytes) {
-                                    res1.append(String.format("%02X:", b))
-                                }
-                                if (res1.isNotEmpty()) {
-                                    res1.deleteCharAt(res1.length - 1)
-                                }
-                                res1.toString()
-                            }
-                        }
-                    } catch (ex: Exception) {
-                        // do nothing
-                    }
-                }
-                return macAddress
+        @SuppressLint("HardwareIds")
+        actual suspend fun getMacAddress(): String {
+            val wifiInfo = getWifiInfo()
+            var macAddress = ""
+            if (wifiInfo != null) {
+                macAddress = wifiInfo.macAddress
             }
-
-
-        actual fun getMacAddress() = macAddressSync
+            val permission = "android.permission.INTERNET"
+            val res: Int = context.checkCallingOrSelfPermission(permission)
+            if (res == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    val all: List<NetworkInterface> = withContext(Dispatchers.IO) {
+                        Collections.list(NetworkInterface.getNetworkInterfaces())
+                    }
+                    for (nif in all) {
+                        if (!nif.name.equals("wlan0", ignoreCase = true)) continue
+                        val macBytes = nif.hardwareAddress
+                        macAddress = if (macBytes == null) {
+                            ""
+                        } else {
+                            val res1 = StringBuilder()
+                            for (b in macBytes) {
+                                res1.append(String.format("%02X:", b))
+                            }
+                            if (res1.isNotEmpty()) {
+                                res1.deleteCharAt(res1.length - 1)
+                            }
+                            res1.toString()
+                        }
+                    }
+                } catch (ex: Exception) {
+                    // do nothing
+                }
+            }
+            return macAddress
+        }
 
 
         private val carrierSync: String
@@ -782,45 +815,6 @@ actual class DeviceInfo {
 
         actual fun getPhoneNumber(): String {
             return phoneNumberSync
-        }
-
-        val supportedAbisSync: List<String>
-            get() {
-                val array = listOf<String>()
-                for (abi in Build.SUPPORTED_ABIS) {
-                    array.plus(abi)
-                }
-                return array
-            }
-
-        actual fun getSupportedAbis(): List<String> {
-            return supportedAbisSync
-        }
-
-        private val supported32BitAbisSync: List<String>
-            get() {
-                val array = listOf<String>()
-                for (abi in Build.SUPPORTED_32_BIT_ABIS) {
-                    array.plus(abi)
-                }
-                return array
-            }
-
-        actual fun getSupported32BitAbis(): List<String> {
-            return supported32BitAbisSync
-        }
-
-        private val supported64BitAbisSync: List<String>
-            get() {
-                val array = listOf<String>()
-                for (abi in Build.SUPPORTED_64_BIT_ABIS) {
-                    array.plus(abi)
-                }
-                return array
-            }
-
-        actual fun getSupported64BitAbis(): List<String> {
-            return supported64BitAbisSync
         }
 
         private fun getPowerStateFromIntent(intent: Intent?): PowerState? {

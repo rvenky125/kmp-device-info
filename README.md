@@ -126,7 +126,6 @@ Note that many APIs are platform-specific. If there is no implementation for a p
 | [getuniqueid](#getuniqueid)                                    | ✅ | ✅ |  |  |  |
 | [getusedmemory](#getusedmemory)                                | ✅ | ✅ |  |  |  |
 | [getuseragent](#getuseragent)                                  | ✅ | ✅ |  |  |  |
-| [getversion](#getversion)                                      | ✅ | ✅ |  |  |  |
 | [getBrightness](#getBrightness)                                | ✅ | ❌ |  |  |  |
 | [hasNotch](#hasNotch)                                          | ✅ | ✅ |  |  |  |
 | [hasDynamicIsland](#hasDynamicIsland)                          | ✅ | ✅ |  |  |  |
@@ -142,9 +141,6 @@ Note that many APIs are platform-specific. If there is no implementation for a p
 | [ispinorfingerprintset](#ispinorfingerprintset)                | ✅ | ✅ |  |  |  |
 | [istablet](#istablet)                                          | ✅ | ✅ |  |  |  |
 | [istabletmode](#istabletmode)                                  | ❌ | ❌ |  |  |  |
-| [supported32BitAbis](#supported32BitAbis)                      | ❌ | ✅ |  |  |  |
-| [supported64BitAbis](#supported64BitAbis)                      | ❌ | ✅ |  |  |  |
-| [supportedAbis](#supportedAbis)                                | ✅ | ✅ |  |  |  |
 | [getSupportedMediaTypeList](#getSupportedMediaTypeList)        | ❌ | ✅ |  |  |  |
 
 ### getApiLevel()
@@ -643,25 +639,6 @@ Tells if the device has a dynamic island.
 ### getDeviceType()
 
 Returns the device’s type class, which will be one of:
-
-
----
-
-### supported32BitAbis()
-
-An ordered list of 32 bit ABIs supported by this device.
-
----
-
-### supported64BitAbis()
-
-An ordered list of 64 bit ABIs supported by this device.
-
----
-
-### supportedAbis()
-
-Returns a list of supported processor architecture version
 
 ---
 

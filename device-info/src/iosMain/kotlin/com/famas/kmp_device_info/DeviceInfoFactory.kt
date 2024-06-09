@@ -1,12 +1,20 @@
 package com.famas.kmp_device_info
 
+
+import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ULongVar
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.allocPointerTo
 import kotlinx.cinterop.cValue
+import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.toKString
+import kotlinx.cinterop.value
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionPortBluetoothA2DP
 import platform.AVFAudio.AVAudioSessionPortBluetoothHFP
@@ -60,7 +68,20 @@ import platform.UIKit.UIUserInterfaceIdiomTV
 import platform.WebKit.WKWebView
 import platform.darwin.TARGET_IPHONE_SIMULATOR
 import platform.darwin.TARGET_OS_MACCATALYST
+import platform.darwin.freeifaddrs
+import platform.darwin.getifaddrs
+import platform.darwin.ifaddrs
+import platform.darwin.inet_ntop
 import platform.darwin.sysctlbyname
+import platform.darwin.task_basic_info
+import platform.darwin.task_info_t
+import platform.posix.AF_INET
+import platform.posix.AF_INET6
+import platform.posix.INET6_ADDRSTRLEN
+import platform.posix.INET_ADDRSTRLEN
+import platform.posix.sa_family_t
+import platform.posix.sockaddr_in
+import platform.posix.sockaddr_in6
 import platform.posix.uname
 import platform.posix.utsname
 import kotlin.coroutines.resume
@@ -451,48 +472,37 @@ object DeviceInfoFactory {
         return getDeviceType().name
     }
 
-    fun getSupportedAbis(): Array<String> {
-        /* https://stackoverflow.com/questions/19859388/how-can-i-get-the-ios-device-cpu-architecture-in-runtime */
-//        val info = NXGetLocalArchInfo()
-//        val typeOfCpu = String(info.description.toByteArray())
-//        return arrayOf(typeOfCpu)
-        return arrayOf()
-    }
-
-    fun getIpAddress(): String {
-        var address = "0.0.0.0"
-//        val interfaces: COpaquePointer? = null
-//        var temp_addr: COpaquePointer? = null
-//        var success = 0
-//        // retrieve the current interfaces - returns 0 on success
-//        success = getifaddrs(interfaces)
-//        if (success == 0) {
-//            // Loop through linked list of interfaces
-//            temp_addr = interfaces
-//            while (temp_addr != null) {
-//                val addr_family = (temp_addr.pointed.ifa_addr.pointed.sa_family).toUInt()
-//                // Check for IPv4 or IPv6-only interfaces
-//                if (addr_family == AF_INET.toUInt() || addr_family == AF_INET6.toUInt()) {
-//                    val ifname = String(temp_addr.pointed.ifa_name)
-//                    if (ifname == "en0" || ifname == "en1") {
-//                        val addr = (temp_addr.pointed.ifa_addr.pointed as sockaddr_in).sin_addr
-//                        val addr_len =
-//                            if (addr_family == AF_INET.toUInt()) INET_ADDRSTRLEN else INET6_ADDRSTRLEN
-//                        val addr_buffer = ByteArray(addr_len)
-//                        // We use inet_ntop because it also supports getting an address from
-//                        // interfaces that are IPv6-only
-//                        val netname: COpaquePointer? =
-//                            inet_ntop(addr_family.toInt(), addr, addr_buffer, addr_len.toUInt())
-//                        // Get NSString from C String
-//                        address = String(netname!!.toUtf8())
-//                    }
-//                }
-//                temp_addr = temp_addr.pointed.ifa_next
-//            }
-//        }
-//        // Free memory
-//        freeifaddrs(interfaces)
-        return address
+    fun getIpAddress(): String? {
+        val (status, interfaces) = memScoped {
+            val ifap = allocPointerTo<ifaddrs>()
+            getifaddrs(ifap.ptr) to ifap.value
+        }
+        return try {
+            generateSequence(interfaces.takeIf { status == 0 }) { it.pointed.ifa_next }
+                .mapNotNull { it.pointed.ifa_addr }
+                .mapNotNull {
+                    val addr = when (it.pointed.sa_family) {
+                        AF_INET.convert<sa_family_t>() -> it.reinterpret<sockaddr_in>().pointed.sin_addr
+                        AF_INET6.convert<sa_family_t>() -> it.reinterpret<sockaddr_in6>().pointed.sin6_addr
+                        else -> return@mapNotNull null
+                    }
+                    memScoped {
+                        val len = maxOf(INET_ADDRSTRLEN, INET6_ADDRSTRLEN)
+                        val dst = allocArray<ByteVar>(len)
+                        inet_ntop(
+                            it.pointed.sa_family.convert(),
+                            addr.ptr,
+                            dst,
+                            len.convert()
+                        )?.toKString()
+                    }
+                }
+                .toList().joinToString(",")
+        } catch (e: Exception) {
+            null
+        } finally {
+            freeifaddrs(interfaces)
+        }
     }
 
     fun isPinOrFingerprintSet(): Boolean {
@@ -503,25 +513,6 @@ object DeviceInfoFactory {
     fun getBatteryLevel(): Float {
         return UIDevice.currentDevice.batteryLevel
     }
-
-//     fun batteryLevelDidChange(notification: NSNotification) {
-//        if (!hasListeners) {
-//            return
-//        }
-//        notification.send
-//        val batteryLevel = getBatteryLevel()
-//        sendEventWithName("RNDeviceInfo_batteryLevelDidChange", batteryLevel)
-//        if (batteryLevel <= _lowBatteryThreshold) {
-//            sendEventWithName("RNDeviceInfo_batteryLevelIsLow", batteryLevel)
-//        }
-//    }
-
-//     fun powerStateDidChange(notification: NSNotification) {
-//        if (!hasListeners) {
-//            return
-//        }
-//        sendEventWithName("RNDeviceInfo_powerStateDidChange", powerState)
-//    }
 
     fun brightnessDidChange(notification: NSNotification): Float {
         if (!hasListeners) {

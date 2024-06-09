@@ -4,7 +4,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.GradleKpmIosX64Variant
 
-val libVersion = "0.0.17-alpha"
+val libVersion = "0.0.18-alpha"
 val artifactId = "kmp-device-info"
 val groupId = "io.github.rvenky125"
 
@@ -55,7 +55,6 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                implementation("androidx.startup:startup-runtime:1.1.1")
             }
         }
         val iosX64Main by getting
@@ -70,7 +69,7 @@ kotlin {
         androidMain.dependencies {
         }
         commonMain.dependencies {
-
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

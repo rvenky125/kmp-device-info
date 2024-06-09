@@ -12,11 +12,11 @@ expect class DeviceInfo {
 
         fun isPinOrFingerprintSet(): Boolean
 
-        fun getIpAddress(): String?
+        suspend fun getIpAddress(): String?
 
         fun isCameraPresent(): Boolean?
 
-        fun getMacAddress(): String
+        suspend fun getMacAddress(): String
 
         fun getCarrier(): String
 
@@ -103,12 +103,6 @@ expect class DeviceInfo {
         suspend fun getUserAgent(): String?
 
         fun getPhoneNumber(): String
-
-        fun getSupportedAbis(): List<String>
-
-        fun getSupported32BitAbis(): List<String>
-
-        fun getSupported64BitAbis(): List<String>
 
         fun getSupportedMediaTypeList(): List<String>
 

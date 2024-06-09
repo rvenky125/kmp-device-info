@@ -8,13 +8,13 @@ actual class DeviceInfo {
 
         actual fun isPinOrFingerprintSet(): Boolean = DeviceInfoFactory.isPinOrFingerprintSet()
 
-        actual fun getIpAddress(): String? = DeviceInfoFactory.getIpAddress()
+        actual suspend fun getIpAddress(): String? = DeviceInfoFactory.getIpAddress()
 
         actual fun isCameraPresent(): Boolean? {
             throw NotAvailableToPlatformException
         }
 
-        actual fun getMacAddress(): String {
+        actual suspend fun getMacAddress(): String {
             return DeviceInfoFactory.getMacAddress()
         }
 
@@ -217,20 +217,6 @@ actual class DeviceInfo {
         }
 
         actual fun getPhoneNumber(): String {
-            throw NotAvailableToPlatformException
-        }
-
-        actual fun getSupportedAbis(): List<String> {
-            return DeviceInfoFactory.getSupportedAbis().toList()
-
-        }
-
-
-        actual fun getSupported32BitAbis(): List<String> {
-            throw NotAvailableToPlatformException
-        }
-
-        actual fun getSupported64BitAbis(): List<String> {
             throw NotAvailableToPlatformException
         }
 

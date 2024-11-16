@@ -231,5 +231,17 @@ actual class DeviceInfo {
         actual fun getPlatFormType(): PlatformType {
             return PlatformType.IOS
         }
+
+        actual fun getReadableVersion(): String {
+            return "${DeviceInfoFactory.getAppVersion()}.${DeviceInfoFactory.getBuildNumber()}"
+        }
+
+        actual fun getVersion(): String {
+            return DeviceInfoFactory.getAppVersion()
+        }
+
+        actual fun getBuildNumber(): String {
+            return DeviceInfoFactory.getBuildNumber()
+        }
     }
 }

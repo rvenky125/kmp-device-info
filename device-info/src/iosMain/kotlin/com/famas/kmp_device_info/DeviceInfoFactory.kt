@@ -73,8 +73,6 @@ import platform.darwin.getifaddrs
 import platform.darwin.ifaddrs
 import platform.darwin.inet_ntop
 import platform.darwin.sysctlbyname
-import platform.darwin.task_basic_info
-import platform.darwin.task_info_t
 import platform.posix.AF_INET
 import platform.posix.AF_INET6
 import platform.posix.INET6_ADDRSTRLEN
@@ -87,7 +85,6 @@ import platform.posix.utsname
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlin.toString
 
 @OptIn(ExperimentalForeignApi::class)
 object DeviceInfoFactory {
@@ -205,11 +202,11 @@ object DeviceInfoFactory {
         return NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleIdentifier") as String
     }
 
-    private fun getAppVersion(): String {
+    fun getAppVersion(): String {
         return NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as String
     }
 
-    private fun getBuildNumber(): String {
+    fun getBuildNumber(): String {
         return NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as String
     }
 

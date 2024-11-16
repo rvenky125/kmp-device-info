@@ -876,5 +876,11 @@ actual class DeviceInfo {
         actual fun getPlatFormType(): PlatformType {
             return PlatformType.ANDROID
         }
+
+        actual fun getReadableVersion(): String = "${getVersion()}.${getBuildNumber()}"
+
+        actual fun getVersion(): String = packageInfo.versionName
+
+        actual fun getBuildNumber(): String = packageInfo.versionCode.toString()
     }
 }

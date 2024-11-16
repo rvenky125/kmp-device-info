@@ -115,5 +115,11 @@ expect class DeviceInfo {
         suspend fun getDeviceToken(): String?
 
         fun getInfoConstants(): InfoConstants
+
+        fun getReadableVersion(): String
+
+        fun getVersion(): String
+
+        fun getBuildNumber(): String
     }
 }

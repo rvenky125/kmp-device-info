@@ -32,7 +32,7 @@ val uniqueId = DeviceInfo.getUniqueId()
 
   ```kotlin
   commonMain.dependencies {
-    api("io.github.rvenky125:kmp-device-info:0.0.17-alpha")
+    api("io.github.rvenky125:kmp-device-info:{version}")
   }
   ```
 </details>
@@ -42,7 +42,7 @@ val uniqueId = DeviceInfo.getUniqueId()
 
   ```kotlin
   commonMain.dependencies {
-    api "io.github.rvenky125:kmp-device-info:0.0.17-alpha"
+    api "io.github.rvenky125:kmp-device-info:{version}"
   }
   ```
 </details>

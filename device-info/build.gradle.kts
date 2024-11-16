@@ -4,7 +4,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.GradleKpmIosX64Variant
 
-val libVersion = "0.0.18-alpha"
+val libVersion = "0.0.20-alpha"
 val artifactId = "kmp-device-info"
 val groupId = "io.github.rvenky125"
 
@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.androidLibrary)
     id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
+//    id("com.louiscad.complete-kotlin")
 }
 
 kotlin {
